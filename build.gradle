@@ -16,7 +16,6 @@ plugins {
     id 'java'
     id 'com.google.protobuf' version "0.8.10"
     id 'org.openjfx.javafxplugin'version '0.0.8'
-    id 'org.beryx.jlink' version '2.12.0'
 }
 
 repositories {
@@ -98,11 +97,10 @@ sourceSets {
 
 mainClassName = "nl.toefel.application.ClientMain"
 
-jlink {
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-    launcher {
-        name = 'hellofx'
-    }
+task execute(type:JavaExec) {
+    main = mainClass
+    classpath = sourceSets.main.runtimeClasspath
 }
+
 // Generate IntelliJ IDEA's .idea & .iml project files
 apply plugin: 'idea'
