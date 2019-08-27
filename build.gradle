@@ -97,10 +97,10 @@ sourceSets {
 
 mainClassName = "nl.toefel.application.ClientMain"
 
-task execute(type:JavaExec) {
-    main = mainClass
-    classpath = sourceSets.main.runtimeClasspath
-}
+//task execute(type:JavaExec) {
+//    main = mainClass
+//    classpath = sourceSets.main.runtimeClasspath
+//}
 
 // Generate IntelliJ IDEA's .idea & .iml project files
 apply plugin: 'idea'
