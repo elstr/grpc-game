@@ -1,0 +1,108 @@
+buildscript {
+    repositories {
+        maven { 
+            // The google mirror is less flaky than mavenCentral()
+            url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+        }
+    }
+    dependencies {
+        // Assumes gradle 2.12 OR HIGHER. Use plugin version 0.7.5 with earlier gradle versions
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
+    }
+}
+
+plugins {
+    id 'application'
+    id 'java'
+    id 'com.google.protobuf' version "0.8.10"
+    id 'org.openjfx.javafxplugin'version '0.0.8'
+    id 'org.beryx.jlink' version '2.12.0'
+}
+
+repositories {
+    maven {
+        // The google mirror is less flaky than mavenCentral()
+        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
+    }
+    mavenLocal()
+}
+
+javafx {
+    version = "12.0.2"
+    modules = [ 'javafx.controls' ]
+}
+
+def grpcVersion = '1.23.0'
+def nettyTcNativeVersion = '2.0.22.Final'
+def protobufVersion = '3.9.0'
+def protocVersion = '3.9.0'
+
+group 'nl.toefel'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 12
+
+dependencies {
+    compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
+    compile "io.grpc:grpc-alts:${grpcVersion}"
+    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile "io.grpc:grpc-all:${grpcVersion}"
+    compile "me.dinowernli:java-grpc-prometheus:0.3.0"
+    compileOnly "javax.annotation:javax.annotation-api:1.2"
+
+
+    compile "io.grpc:grpc-netty:${grpcVersion}"
+    compile "io.netty:netty-tcnative-boringssl-static:${nettyTcNativeVersion}"
+    compile "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+
+    testCompile "io.grpc:grpc-testing:${grpcVersion}"
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+
+protobuf {
+    // Protobuf will search for the protoc command on the systems path by default,
+    // but the next line pulls in a specific version of a precompiled protoc without
+    // required it in the system's search path
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protocVersion}"
+    }
+    
+    // Plugins for the protobuf compiler. This sections defines a plugin named 'grpc'
+    // which generates java code from the .proto files. 
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+    
+    //The Protobuf plugin generates a task for each protoc run, which is for a sourceSet 
+    // in a Java project, or a variant in an Android project. The task has configuration 
+    // interfaces that allow you to control the type of outputs, the codegen plugins to use, 
+    // and parameters. This section configures all tasks to include the grpc plugin.
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+// Inform IDEs like IntelliJ IDEA, Eclipse or NetBeans about the generated code. This 
+// adds the generated sources under build to your project as a 'sources root'.
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+mainClassName = "nl.toefel.application.ClientMain"
+
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'hellofx'
+    }
+}
+// Generate IntelliJ IDEA's .idea & .iml project files
+apply plugin: 'idea'

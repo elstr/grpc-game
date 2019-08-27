@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package nl.toefel.grpc.game;
+
+message Player {
+    string id = 1;
+    string name = 2;
+    int64 join_timestamp = 3;
+    int32 wins = 4;
+}
+
+service TicTacToe {
+    rpc ListPlayers(ListPlayersRequest) returns (ListPlayersResponse) {}
+}
+
+message ListPlayersRequest { }
+message ListPlayersResponse {
+    repeated Player players = 1;
+}
