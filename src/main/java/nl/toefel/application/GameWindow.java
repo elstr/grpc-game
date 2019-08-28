@@ -9,7 +9,6 @@ import io.grpc.ManagedChannelBuilder;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -17,6 +16,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import nl.toefel.application.components.CreatePlayerComponent;
 import nl.toefel.application.components.PlayerListComponent;
+import nl.toefel.grpc.game.TicTacToeGrpc;
 import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
 import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
@@ -27,7 +27,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.TicTacToeFutureStub;
-import static nl.toefel.grpc.game.TicTacToeGrpc.newFutureStub;
 
 public class GameWindow extends Application {
 
@@ -42,7 +41,7 @@ public class GameWindow extends Application {
             .forAddress("localhost", 8080)
             .usePlaintext()
             .build();
-        ticTacToeClient = newFutureStub(channel);
+        ticTacToeClient = TicTacToeGrpc.newFutureStub(channel);
     }
 
     @Override
@@ -59,7 +58,7 @@ public class GameWindow extends Application {
         mainLayout.setTop(createPlayerComponent);
         mainLayout.setLeft(playerListComponent);
 
-        Scene scene = new Scene(mainLayout, 640, 480);
+        Scene scene = new Scene(mainLayout, 1024, 800);
         stage.setScene(scene);
         stage.show();
     }
@@ -86,7 +85,7 @@ public class GameWindow extends Application {
                     players.clear();
                     Stage stage = new Stage();
                     stage.setScene(new Scene(new Label("Error: " + t.getMessage())));
-                    stage.setTitle("My modal window");
+                    stage.setTitle("Error");
                     stage.initModality(Modality.WINDOW_MODAL);
                     stage.show();
                 });

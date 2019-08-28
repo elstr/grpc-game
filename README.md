@@ -10,3 +10,12 @@ Some quick guidelines
 Run server `./gradlew -PmainClass=nl.toefel.server.ServerMain execute`
 
 Run client `./gradlew -PmainClass=nl.toefel.application.ClientMain execute`
+
+
+### Scaling issues on Linux
+
+See https://stackoverflow.com/questions/26182460/javafx-8-hidpi-support
+ 
+Solution:
+
+`gsettings set org.gnome.desktop.interface scaling-factor 2`
