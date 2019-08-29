@@ -1,4 +1,4 @@
-package nl.toefel.application.components;
+package nl.toefel.client.view;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;

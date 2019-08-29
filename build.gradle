@@ -95,7 +95,7 @@ sourceSets {
     }
 }
 
-mainClassName = "nl.toefel.application.ClientMain"
+mainClassName = "nl.toefel.client.application.ClientMain"
 
 //task execute(type:JavaExec) {
 //    main = mainClass

@@ -9,7 +9,7 @@ Some quick guidelines
 
 Run server `./gradlew -PmainClass=nl.toefel.server.ServerMain execute`
 
-Run client `./gradlew -PmainClass=nl.toefel.application.ClientMain execute`
+Run client `./gradlew -PmainClass=nl.toefel.client.ClientMain execute`
 
 
 ### Scaling issues on Linux
