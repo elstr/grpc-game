@@ -9,11 +9,41 @@ message Player {
     int32 wins = 4;
 }
 
+message Game {
+    string id = 1;
+    Player player_x = 2;
+    Player player_o = 3;
+    int64 start_timestamp = 4;
+    int64 end_timestamp = 5;
+    string status = 6;
+    Board board = 7;
+}
+
+message Board {
+    repeated BoardRow rows = 1;
+}
+
+message BoardRow {
+    repeated string columns = 1;
+}
+
 service TicTacToe {
-    rpc ListPlayers(ListPlayersRequest) returns (ListPlayersResponse) {}
+    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) { }
+    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {}
+    rpc ListGames (ListGamesRequest) returns (ListGamesResponse) {}
 }
 
 message ListPlayersRequest { }
 message ListPlayersResponse {
     repeated Player players = 1;
 }
+
+message CreatePlayerRequest {
+    string name = 1;
+}
+
+message ListGamesRequest {}
+message ListGamesResponse {
+    repeated Game games = 1;
+}
+

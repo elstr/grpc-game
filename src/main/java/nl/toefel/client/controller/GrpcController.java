@@ -12,8 +12,10 @@ import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.TicTacToeBlockingStub;
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
 public class GrpcController {
 
@@ -44,34 +46,29 @@ public class GrpcController {
   }
 
   public void createPlayer(String playerName) {
-    System.out.println("Creating player " + playerName);
+    showDialogOnError(() -> {
+      var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
+      Player player = newBlockingStub(channel).createPlayer(request);
+      Modals.showPopup("Success", "Created player: " + player.toString());
+    });
   }
 
   public void listPlayers() {
-    try {
-      ListPlayersRequest listPlayersRequest = ListPlayersRequest.newBuilder().build();
-      TicTacToeBlockingStub ticTacToeBlockingStub = newBlockingStub(channel);
-      ListPlayersResponse listPlayersResponse = ticTacToeBlockingStub.listPlayers(listPlayersRequest);
+    showDialogOnError(() -> {
+      var listPlayersRequest = ListPlayersRequest.newBuilder().build();
+      ListPlayersResponse listPlayersResponse = newBlockingStub(channel).listPlayers(listPlayersRequest);
       state.replaceAllPlayers(listPlayersResponse.getPlayersList());
-    } catch (Throwable e) {
+    });
+  }
+
+  public void showDialogOnError(Runnable runnable) {
+    try {
+      runnable.run();
+    } catch (Throwable t) {
       // Status gives an idea of the error cause (like UNAVAILABLE or DEADLINE_EXCEEDED)
       // it also contains the underlying exception
-      Status status = Status.fromThrowable(e);
-      Modals.showGrpcError("Error while listing players", status);
+      Status status = Status.fromThrowable(t);
+      Modals.showGrpcError("Error", status);
     }
-    // ASYNC VERSION:
-    //    ListenableFuture<ListPlayersResponse> listPlayersFuture = newFutureStub(channel).listPlayers(listPlayersRequest);
-    //    Futures.addCallback(listPlayersFuture, new FutureCallback<>() {
-    //      @Override
-    //      public void onSuccess(@NullableDecl ListPlayersResponse result) {
-    //        state.replaceAllPlayers(result.getPlayersList());
-    //      }
-    //
-    //      @Override
-    //      public void onFailure(Throwable t) {
-    //        t.printStackTrace();
-    //        Modals.showGrpcError("Error while listing players", Status.fromThrowable(e));
-    //      }
-    //    }, executor);
   }
 }
