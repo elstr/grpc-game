@@ -1,36 +1,22 @@
 package nl.toefel.client;
 
-import io.grpc.ManagedChannel;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import nl.toefel.client.controller.GrpcController;
-import nl.toefel.client.state.UIGameState;
-import nl.toefel.client.view.CreatePlayerComponent;
+import nl.toefel.client.state.ClientState;
+import nl.toefel.client.view.JoinGameComponent;
 import nl.toefel.client.view.PlayerListComponent;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import static nl.toefel.grpc.game.TicTacToeGrpc.TicTacToeFutureStub;
 
 public class GameWindow extends Application {
 
-    private Executor executor = Executors.newWorkStealingPool();
-    private ManagedChannel channel;
-    private TicTacToeFutureStub ticTacToeClient;
-    private UIGameState state;
+    private ClientState state;
     private GrpcController controller;
 
     public GameWindow() {
-        state = new UIGameState();
+        state = new ClientState();
         controller = new GrpcController(state);
-    }
-
-    @Override
-    public void init() throws Exception {
-        controller.connect("localhost", 8080);
     }
 
     @Override
@@ -40,17 +26,19 @@ public class GameWindow extends Application {
         System.out.println(javaVersion);
         System.out.println(javafxVersion);
 
-        CreatePlayerComponent createPlayerComponent = new CreatePlayerComponent(controller::createPlayer);
+        JoinGameComponent joinGameComponent = new JoinGameComponent(controller::joinServer);
         PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers);
 
         BorderPane mainLayout = new BorderPane();
-        mainLayout.setTop(createPlayerComponent);
+        mainLayout.setTop(joinGameComponent);
         mainLayout.setLeft(playerListComponent);
 
         Scene scene = new Scene(mainLayout, 1024, 800);
         stage.setScene(scene);
         stage.show();
     }
+
+    public void load
 
     public static void main(String[] args) {
         launch();
