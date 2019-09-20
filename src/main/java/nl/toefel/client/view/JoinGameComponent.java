@@ -1,30 +1,44 @@
 package nl.toefel.client.view;
 
+import io.grpc.ManagedChannel;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import nl.toefel.util.TriConsumer;
+import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.util.function.Consumer;
 
+import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
+
 public class JoinGameComponent extends HBox {
     private TextField playerNameTxt = new TextField();
-    private TextField serverIpTxt = new TextField("127.0.0.1");
-    private TextField serverPortTxt = new TextField("8080");
     private Label playerNameLbl = new Label("Player name:");
-    private Label serverIpLbl = new Label("IP:");
-    private Label serverPortLbl = new Label("Port:");
+    private Button createPlayerBtn = new Button("Create player");
 
-    private Button createPlayerBtn = new Button("Join");
+    public JoinGameComponent(Consumer<String> joinServerCallback,
+                             SimpleObjectProperty<ManagedChannel> grpcConnectionProperty,
+                             SimpleObjectProperty<Player> myselfProperty) {
 
-    public JoinGameComponent(TriConsumer<String, String, String> joinServerCallback) {
         this.setPadding(new Insets(5.0));
-        createPlayerBtn.setOnAction(e -> joinServerCallback.accept(serverIpTxt.getText(), serverPortTxt.getText(), playerNameTxt.getText()));
+        createPlayerBtn.setOnAction(e -> joinServerCallback.accept(playerNameTxt.getText()));
+        createPlayerBtn.setDisable(true);
         setAlignment(Pos.BASELINE_CENTER);
         setSpacing(10.0);
-        this.getChildren().addAll(serverIpLbl, serverIpTxt, serverPortLbl, serverPortTxt, playerNameLbl, playerNameTxt, createPlayerBtn);
+        this.getChildren().addAll(playerNameLbl, playerNameTxt, createPlayerBtn);
+        disableOnNoConnectionOrAlreadyJoined(grpcConnectionProperty, myselfProperty);
+    }
+
+    private void disableOnNoConnectionOrAlreadyJoined(SimpleObjectProperty<ManagedChannel> grpcConnectionProperty, SimpleObjectProperty<Player> myselfProperty) {
+        grpcConnectionProperty.addListener((property, oldConnection, newConnection) -> {
+            createPlayerBtn.setDisable(newConnection == null);
+        });
+
+        myselfProperty.addListener((property, oldMyself, newMyself) -> {
+            createPlayerBtn.setDisable(newMyself != null);
+        });
     }
 }

@@ -28,10 +28,14 @@ message BoardRow {
 }
 
 service TicTacToe {
+    rpc TestConnection(TestConnectionRequest) returns (TestConnectionResponse) {}
     rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) { }
     rpc CreatePlayer (CreatePlayerRequest) returns (Player) {}
     rpc ListGames (ListGamesRequest) returns (ListGamesResponse) {}
 }
+
+message TestConnectionRequest {}
+message TestConnectionResponse {}
 
 message ListPlayersRequest { }
 message ListPlayersResponse {

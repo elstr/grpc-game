@@ -1,8 +1,10 @@
 package nl.toefel.server;
 
+import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nl.toefel.grpc.game.TicTacToeGrpc;
+import nl.toefel.grpc.game.TicTacToeOuterClass;
 import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
 import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
@@ -13,6 +15,7 @@ import nl.toefel.server.state.ServerState;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListGamesRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListGamesResponse;
@@ -25,6 +28,12 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
   public TicTacToeGame(ServerState state) {
     this.state = state;
     this.lock = new ReentrantLock();
+  }
+
+  @Override
+  public void testConnection(TestConnectionRequest request, StreamObserver<TestConnectionResponse> responseObserver) {
+    responseObserver.onNext(TestConnectionResponse.newBuilder().build());
+    responseObserver.onCompleted();
   }
 
   @Override

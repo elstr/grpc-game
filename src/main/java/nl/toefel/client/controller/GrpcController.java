@@ -6,11 +6,13 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.Modals;
+import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
@@ -28,28 +30,25 @@ public class GrpcController {
     this.state = state;
   }
 
-  public void connect(String host, int port) throws ControllerException {
-    ManagedChannel grpcConnection = ManagedChannelBuilder
-        .forAddress(host, port)
-        .usePlaintext()
-        .build();
+  public void connectToServer(String host, String port) throws ControllerException {
+    showDialogOnError(() -> {
+      ManagedChannel grpcConnection = ManagedChannelBuilder
+          .forAddress(host, Integer.parseInt(port))
+          .usePlaintext()
+          .build();
 
-    ConnectivityState connectionState = grpcConnection.getState(true);
+      // test the connection, because gRPC lazily connects
+      newBlockingStub(grpcConnection).testConnection(TestConnectionRequest.newBuilder().build());
 
-    System.out.println(connectionState);
-    if (connectionState != ConnectivityState.READY) {
-      System.out.println("connection: not ready " + connectionState);
-    }
-
-    state.setGrpcConnection(grpcConnection);
+      state.setGrpcConnection(grpcConnection);
+    });
   }
 
-  public void joinServer(String ip, String port, String playerName) {
+  public void createPlayer(String playerName) {
     showDialogOnError(() -> {
-      state.connect(ip, Integer.parseInt(port));
-
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
+      state.setMyself(player);
       Modals.showPopup("Success", "Created player: " + player.toString());
     });
   }
