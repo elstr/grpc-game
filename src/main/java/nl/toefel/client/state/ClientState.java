@@ -5,6 +5,8 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import nl.toefel.grpc.game.TicTacToeOuterClass;
+import nl.toefel.grpc.game.TicTacToeOuterClass.GameState;
 
 import java.util.List;
 
@@ -29,6 +31,9 @@ public class ClientState {
 
   // Observable list with all the players
   private final ObservableList<Player> players = FXCollections.observableArrayList();
+
+  // The state of the current active game
+  private final SimpleObjectProperty<GameState> gameStateProperty = new SimpleObjectProperty<>(null);
 
   public void setGrpcConnection(ManagedChannel grpcConnection) {
     this.grpcConnection = grpcConnection;
@@ -71,5 +76,9 @@ public class ClientState {
   // Only call this on UI thread!
   public ObservableList<Player> getPlayers() {
     return players;
+  }
+
+  public SimpleObjectProperty<GameState> getGameStateProperty() {
+    return gameStateProperty;
   }
 }

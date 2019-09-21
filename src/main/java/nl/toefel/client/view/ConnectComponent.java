@@ -25,6 +25,7 @@ public class ConnectComponent extends HBox {
         connectBtn.setOnAction(e -> joinServerCallback.accept(serverIpTxt.getText(), serverPortTxt.getText()));
         setAlignment(Pos.BASELINE_CENTER);
         setSpacing(10.0);
+
         this.getChildren().addAll(serverIpLbl, serverIpTxt, serverPortLbl, serverPortTxt, connectBtn, stateLbl);
 
         grpcConnectionProperty.addListener((property, oldChannel, newChannel) -> {
@@ -36,8 +37,8 @@ public class ConnectComponent extends HBox {
         });
     }
 
-    private void updateState(boolean disable, String s) {
-        stateLbl.setText(s);
+    private void updateState(boolean disable, String stateLabelValue) {
+        stateLbl.setText(stateLabelValue);
         serverIpTxt.setDisable(disable);
         serverPortTxt.setDisable(disable);
         connectBtn.setDisable(disable);

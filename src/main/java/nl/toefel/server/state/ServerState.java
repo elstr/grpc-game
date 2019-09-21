@@ -1,6 +1,5 @@
 package nl.toefel.server.state;
 
-import nl.toefel.grpc.game.TicTacToeOuterClass.Game;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
 import java.util.ArrayList;
@@ -10,14 +9,9 @@ public class ServerState {
   private int playerIdSequence = 0;
   private int gameIdSequence = 0;
   private List<Player> players = new ArrayList<>();
-  private List<Game> games = new ArrayList<>();
 
   public List<Player> getPlayers() {
     return new ArrayList<>(players);
-  }
-
-  public List<Game> getGames() {
-    return new ArrayList<>(games);
   }
 
   public Player createPlayer(String name) {

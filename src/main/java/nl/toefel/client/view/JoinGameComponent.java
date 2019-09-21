@@ -18,6 +18,7 @@ public class JoinGameComponent extends HBox {
     private TextField playerNameTxt = new TextField();
     private Label playerNameLbl = new Label("Player name:");
     private Button createPlayerBtn = new Button("Create player");
+    private Label stateLbl = new Label("State: not joined");
 
     public JoinGameComponent(Consumer<String> joinServerCallback,
                              SimpleObjectProperty<ManagedChannel> grpcConnectionProperty,
@@ -28,7 +29,9 @@ public class JoinGameComponent extends HBox {
         createPlayerBtn.setDisable(true);
         setAlignment(Pos.BASELINE_CENTER);
         setSpacing(10.0);
-        this.getChildren().addAll(playerNameLbl, playerNameTxt, createPlayerBtn);
+
+        this.getChildren().addAll(playerNameLbl, playerNameTxt, createPlayerBtn, stateLbl);
+
         disableOnNoConnectionOrAlreadyJoined(grpcConnectionProperty, myselfProperty);
     }
 
@@ -38,7 +41,10 @@ public class JoinGameComponent extends HBox {
         });
 
         myselfProperty.addListener((property, oldMyself, newMyself) -> {
-            createPlayerBtn.setDisable(newMyself != null);
+            if (newMyself != null) {
+                createPlayerBtn.setDisable(newMyself != null);
+                stateLbl.setText("State: joined as " + newMyself.getName());
+            }
         });
     }
 }

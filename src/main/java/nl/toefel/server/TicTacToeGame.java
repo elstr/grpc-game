@@ -1,24 +1,15 @@
 package nl.toefel.server;
 
-import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nl.toefel.grpc.game.TicTacToeGrpc;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
-import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
-import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
-import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
+import nl.toefel.grpc.game.TicTacToeOuterClass.*;
 import nl.toefel.server.state.AlreadyExistsException;
 import nl.toefel.server.state.AutoClosableLocker;
 import nl.toefel.server.state.ServerState;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.ListGamesRequest;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.ListGamesResponse;
 
 public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
@@ -50,15 +41,6 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
     withLockAndErrorHandling(() -> {
       Player player = state.createPlayer(request.getName());
       responseObserver.onNext(player);
-      responseObserver.onCompleted();
-    }, responseObserver);
-  }
-
-  @Override
-  public void listGames(ListGamesRequest request, StreamObserver<ListGamesResponse> responseObserver) {
-    withLockAndErrorHandling(() -> {
-      ListGamesResponse response = ListGamesResponse.newBuilder().addAllGames(state.getGames()).build();
-      responseObserver.onNext(response);
       responseObserver.onCompleted();
     }, responseObserver);
   }

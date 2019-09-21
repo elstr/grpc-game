@@ -1,22 +1,16 @@
 package nl.toefel.client.controller;
 
-import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.Modals;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
-import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
 public class GrpcController {
 
@@ -49,7 +43,6 @@ public class GrpcController {
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
       state.setMyself(player);
-      Modals.showPopup("Success", "Created player: " + player.toString());
     });
   }
 
@@ -60,6 +53,8 @@ public class GrpcController {
       state.replaceAllPlayers(listPlayersResponse.getPlayersList());
     });
   }
+
+  public void startGame()
 
   public void showDialogOnError(Runnable runnable) {
     try {

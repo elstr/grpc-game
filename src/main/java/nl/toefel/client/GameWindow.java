@@ -1,16 +1,19 @@
 package nl.toefel.client;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import nl.toefel.client.controller.GrpcController;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.ConnectComponent;
+import nl.toefel.client.view.GameComponent;
 import nl.toefel.client.view.JoinGameComponent;
 import nl.toefel.client.view.PlayerListComponent;
+
+import java.lang.ref.PhantomReference;
 
 public class GameWindow extends Application {
 
@@ -31,15 +34,15 @@ public class GameWindow extends Application {
 
         ConnectComponent connectComponent = new ConnectComponent(controller::connectToServer, state.getGrpcConnectionProperty());
         JoinGameComponent joinGameComponent = new JoinGameComponent(controller::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
-        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers);
+        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty());
+        GameComponent gameComponent = new GameComponent(state.getMyselfProperty(), state.getGameStateProperty());
 
-        HBox listAndGameLayout = new HBox(playerListComponent);
+        HBox listAndGameLayout = new HBox(playerListComponent, gameComponent);
+        HBox.setHgrow(playerListComponent, Priority.ALWAYS);
+        HBox.setHgrow(gameComponent, Priority.ALWAYS);
 
         VBox mainLayout = new VBox(connectComponent, joinGameComponent, listAndGameLayout);
-
-//        BorderPane mainLayout = new BorderPane();
-//        mainLayout.setTop(joinGameComponent);
-//        mainLayout.setLeft(playerListComponent);
+        VBox.setVgrow(listAndGameLayout, Priority.ALWAYS);
 
         Scene scene = new Scene(mainLayout, 1024, 800);
         stage.setScene(scene);
