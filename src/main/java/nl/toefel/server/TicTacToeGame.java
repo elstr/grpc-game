@@ -8,6 +8,8 @@ import nl.toefel.server.state.AlreadyExistsException;
 import nl.toefel.server.state.AutoClosableLocker;
 import nl.toefel.server.state.ServerState;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,12 +25,14 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
   @Override
   public void testConnection(TestConnectionRequest request, StreamObserver<TestConnectionResponse> responseObserver) {
+    log("test connection call received");
     responseObserver.onNext(TestConnectionResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
   @Override
   public void listPlayers(ListPlayersRequest request, StreamObserver<ListPlayersResponse> responseObserver) {
+    log("listPlayers call received");
     withLockAndErrorHandling(() -> {
       ListPlayersResponse response = ListPlayersResponse.newBuilder().addAllPlayers(state.getPlayers()).build();
       responseObserver.onNext(response);
@@ -38,6 +42,7 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
   @Override
   public void createPlayer(CreatePlayerRequest request, StreamObserver<Player> responseObserver) {
+    log("createPlayer call received");
     withLockAndErrorHandling(() -> {
       Player player = state.createPlayer(request.getName());
       responseObserver.onNext(player);
@@ -56,9 +61,19 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
     try (var ignored = new AutoClosableLocker(lock)) {
       function.run();
     } catch (AlreadyExistsException e) {
+      log(e);
       responseObserver.onError(Status.ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
+      log(e);
       responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asRuntimeException());
     }
+  }
+
+  private void log(Exception e) {
+    log(e.getClass().getSimpleName() + ": " + e.getMessage());
+  }
+
+  private void log(String msg) {
+    System.out.println(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ": " + msg);
   }
 }

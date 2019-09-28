@@ -54,8 +54,6 @@ public class GrpcController {
     });
   }
 
-  public void startGame()
-
   public void showDialogOnError(Runnable runnable) {
     try {
       runnable.run();

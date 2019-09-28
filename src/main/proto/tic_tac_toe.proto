@@ -13,7 +13,6 @@ service TicTacToe {
     rpc TestConnection(TestConnectionRequest) returns (TestConnectionResponse) {}
     rpc CreatePlayer (CreatePlayerRequest) returns (Player) {}
     rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) { }
-    rpc ListPlayersStream (ListPlayersRequest) returns (stream ListPlayersResponse) { }
     rpc PlayGame (stream Choice) returns (stream GameState) {}
 }
 

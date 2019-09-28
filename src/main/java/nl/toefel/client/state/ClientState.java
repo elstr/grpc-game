@@ -1,10 +1,13 @@
 package nl.toefel.client.state;
 
+import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
+import io.grpc.Status;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import nl.toefel.client.view.Modals;
 import nl.toefel.grpc.game.TicTacToeOuterClass;
 import nl.toefel.grpc.game.TicTacToeOuterClass.GameState;
 
@@ -38,6 +41,22 @@ public class ClientState {
   public void setGrpcConnection(ManagedChannel grpcConnection) {
     this.grpcConnection = grpcConnection;
     this.grpcConnectionProperty.set(this.grpcConnection);
+    this.grpcConnection.notifyWhenStateChanged(ConnectivityState.READY, () -> {
+      reset();
+      Modals.showGrpcError("Disconnected", Status.CANCELLED);
+    });
+  }
+
+  private void reset() {
+    Platform.runLater(() -> {
+      grpcConnection.shutdownNow();
+      grpcConnection = null;
+      grpcConnectionProperty.set(null);
+      myself = null;
+      myselfProperty.set(null);
+      players.clear();
+      gameStateProperty.set(null);
+    });
   }
 
   public ManagedChannel getGrpcConnection() {

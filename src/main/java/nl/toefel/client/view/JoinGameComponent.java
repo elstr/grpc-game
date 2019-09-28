@@ -41,9 +41,11 @@ public class JoinGameComponent extends HBox {
         });
 
         myselfProperty.addListener((property, oldMyself, newMyself) -> {
+            createPlayerBtn.setDisable(newMyself != null);
             if (newMyself != null) {
-                createPlayerBtn.setDisable(newMyself != null);
                 stateLbl.setText("State: joined as " + newMyself.getName());
+            } else {
+                stateLbl.setText("State: not joined");
             }
         });
     }
