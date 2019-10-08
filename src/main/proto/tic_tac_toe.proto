@@ -2,6 +2,20 @@ syntax = "proto3";
 
 package nl.toefel.grpc.game;
 
+service TicTacToe {
+    rpc TestConnection (TestConnectionRequest) returns (TestConnectionResponse) {    }
+    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {    }
+    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) {    }
+    rpc PlayGame (stream GameCommand) returns (stream GameEvent) {    }
+}
+
+message TestConnectionRequest {}
+message TestConnectionResponse {}
+
+message CreatePlayerRequest {
+    string name = 1;
+}
+
 message Player {
     string id = 1;
     string name = 2;
@@ -9,37 +23,56 @@ message Player {
     int32 wins = 4;
 }
 
-service TicTacToe {
-    rpc TestConnection(TestConnectionRequest) returns (TestConnectionResponse) {}
-    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {}
-    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) { }
-    rpc PlayGame (stream Choice) returns (stream GameState) {}
-}
-
-message TestConnectionRequest {}
-message TestConnectionResponse {}
-
 message ListPlayersRequest { }
 message ListPlayersResponse {
     repeated Player players = 1;
 }
 
-message CreatePlayerRequest {
-    string name = 1;
+message GameCommand {
+    oneof command {
+        ChallengePlayer challenge_player = 1;
+        AcceptChallenge accept_challenge = 2;
+        BoardMove board_move = 3;
+        EndGame end_game = 4;
+    }
 }
 
-message Choice {
-    string opponent = 1;
+message ChallengePlayer {
+    Player from_player = 2;
+    Player to_player = 3;
+}
+
+message AcceptChallenge {
+    string game_id = 1;
+    bool accepted = 2;
+}
+
+message BoardMove {
+    string game_id = 1;
     int32 row = 2;
     int32 column = 3;
 }
 
-message GameState {
-    Player player_x = 1;
-    Player player_o = 2;
-    Player next_player = 3;
-    string status = 4;
-    Board board = 5;
+message EndGame {
+    string game_id = 1;
+    string status = 2;
+    Player winner = 3;
+}
+
+message GameEvent {
+    EventType type = 1;
+    string game_id = 2;
+    Player player_x = 3;
+    Player player_o = 4;
+    Player next_player = 5;
+    Board board = 6;
+}
+
+enum EventType {
+    CHALLENGE_GAME = 0;
+    START_GAME = 1;
+    BOARD_MOVE = 2;
+    END_GAME = 3;
 }
 
 message Board {

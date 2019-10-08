@@ -10,6 +10,7 @@ import nl.toefel.client.controller.GrpcController;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.ConnectComponent;
 import nl.toefel.client.view.GameComponent;
+import nl.toefel.client.view.GamesTabComponent;
 import nl.toefel.client.view.JoinGameComponent;
 import nl.toefel.client.view.PlayerListComponent;
 
@@ -35,7 +36,8 @@ public class GameWindow extends Application {
         ConnectComponent connectComponent = new ConnectComponent(controller::connectToServer, state.getGrpcConnectionProperty());
         JoinGameComponent joinGameComponent = new JoinGameComponent(controller::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
         PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty());
-        GameComponent gameComponent = new GameComponent(state.getMyselfProperty(), state.getGameStateProperty());
+        GamesTabComponent gameComponent = new GamesTabComponent(state.getGameStates());
+//        GameComponent gameComponent = new GameComponent(state.getMyselfProperty(), state.getGameStateProperty());
 
         HBox listAndGameLayout = new HBox(playerListComponent, gameComponent);
         HBox.setHgrow(playerListComponent, Priority.ALWAYS);
