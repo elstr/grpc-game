@@ -1,4 +1,4 @@
-package nl.toefel.greeter;
+package nl.toefel.greeterexample;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;

@@ -72,6 +72,7 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
         System.out.println("on completed");
       }
     };
+
     state.trackSteam(gameCommandStream, responseObserver);
     return gameCommandStream;
   }
@@ -79,6 +80,8 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
   /**
    * Runs code within the global lock and handles errors by re-throwing them as a grpc Status which is understood
    * by the grpc system.
+   *
+   * TODO move lock to state or create GrpcController decorator
    *
    * @param function
    * @param responseObserver
