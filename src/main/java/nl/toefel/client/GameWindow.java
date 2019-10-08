@@ -35,13 +35,12 @@ public class GameWindow extends Application {
 
         ConnectComponent connectComponent = new ConnectComponent(controller::connectToServer, state.getGrpcConnectionProperty());
         JoinGameComponent joinGameComponent = new JoinGameComponent(controller::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
-        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty());
-        GamesTabComponent gameComponent = new GamesTabComponent(state.getGameStates());
-//        GameComponent gameComponent = new GameComponent(state.getMyselfProperty(), state.getGameStateProperty());
+        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty(), controller::challengePlayer);
+        GamesTabComponent gameTabs = new GamesTabComponent(state.getMyselfProperty(), state.getGameStates());
 
-        HBox listAndGameLayout = new HBox(playerListComponent, gameComponent);
+        HBox listAndGameLayout = new HBox(playerListComponent, gameTabs);
         HBox.setHgrow(playerListComponent, Priority.ALWAYS);
-        HBox.setHgrow(gameComponent, Priority.ALWAYS);
+        HBox.setHgrow(gameTabs, Priority.ALWAYS);
 
         VBox mainLayout = new VBox(connectComponent, joinGameComponent, listAndGameLayout);
         VBox.setVgrow(listAndGameLayout, Priority.ALWAYS);
@@ -49,6 +48,8 @@ public class GameWindow extends Application {
         Scene scene = new Scene(mainLayout, 1024, 800);
         stage.setScene(scene);
         stage.show();
+
+        controller.addTestGame();
     }
 
     public static void main(String[] args) {

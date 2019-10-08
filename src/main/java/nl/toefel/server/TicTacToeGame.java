@@ -47,6 +47,60 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
     }, responseObserver);
   }
 
+  @Override
+  public StreamObserver<GameCommand> playGame(StreamObserver<GameEvent> responseObserver) {
+    return new StreamObserver<>() {
+      @Override
+      public void onNext(GameCommand command) {
+        System.out.println(command);
+        switch (command.getCommandCase()){
+          case CHALLENGE_PLAYER:
+            GameEvent event = GameEvent.newBuilder()
+                .setGameId("1")
+                .setType(EventType.START_GAME)
+                .setNextPlayer(command.getChallengePlayer().getFromPlayer())
+                .setPlayerO(command.getChallengePlayer().getFromPlayer())
+                .setPlayerX(command.getChallengePlayer().getToPlayer())
+                .setBoard(createEmptyBoard())
+                .build();
+            responseObserver.onNext(event);
+            break;
+          case ACCEPT_CHALLENGE:
+            break;
+          case BOARD_MOVE:
+            break;
+          case END_GAME:
+            break;
+          case COMMAND_NOT_SET:
+            break;
+        }
+
+      }
+
+      private Board createEmptyBoard() {
+        return Board.newBuilder()
+            .addRows(createEmptyRow())
+            .addRows(createEmptyRow())
+            .addRows(createEmptyRow())
+            .build();
+      }
+
+      private BoardRow createEmptyRow() {
+        return BoardRow.newBuilder().addColumns("").addColumns("").addColumns("").build();
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        t.printStackTrace();
+      }
+
+      @Override
+      public void onCompleted() {
+        System.out.println("on completed");
+      }
+    };
+  }
+
   /**
    * Runs code within the global lock and handles errors by re-throwing them as a grpc Status which is understood
    * by the grpc system.

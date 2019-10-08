@@ -10,7 +10,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import nl.toefel.client.view.Modals;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
 import nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
 
 import java.util.LinkedHashMap;
@@ -42,7 +41,7 @@ public class ClientState {
   // Maps gameId to the latest game event, insertion ordered
   private final ObservableMap<String, GameEvent> gameStates = FXCollections.observableMap(new LinkedHashMap<>());
 
-  // The event stream
+  // The command event stream to send game commands on (like challenge player, or a board move)
   private final SimpleObjectProperty<StreamObserver<GameCommand>> gameCommandStream = new SimpleObjectProperty<>(null);
 
   public void setGrpcConnection(ManagedChannel grpcConnection) {

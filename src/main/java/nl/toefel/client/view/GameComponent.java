@@ -25,26 +25,23 @@ public class GameComponent extends VBox {
     private SimpleObjectProperty<Player> myselfProperty;
 
     public GameComponent(SimpleObjectProperty<Player> myselfProperty,
-                         SimpleObjectProperty<GameState> gameStateProperty) {
+                         GameEvent currentGameState) {
         this.myselfProperty = myselfProperty;
         this.setPadding(new Insets(5.0));
         gridPane.setPadding(new Insets(5.0));
-        gridPane.setGridLinesVisible(true);
-
-        gameStateProperty.addListener((property, oldState, newState) -> renderGameState(newState));
-
+        renderGameState(currentGameState);
         this.getChildren().addAll(gameLbl, playerXLbl, playerOLbl, statusLbl, gridPane);
     }
 
-    private void renderGameState(GameState gameState) {
+    private void renderGameState(GameEvent gameState) {
         renderPlayerNames(gameState);
         renderBoard(gameState);
     }
 
-    private void renderPlayerNames(GameState gameState) {
+    private void renderPlayerNames(GameEvent gameState) {
         playerOLbl.setText("Player O: " + gameState.getPlayerO().getName());
         playerXLbl.setText("Player X: " + gameState.getPlayerX().getName());
-        String status = "Status: " + gameState.getStatus();
+        String status = "Status: " + gameState.getType();
         Player nextPlayer = gameState.getNextPlayer();
         if (nextPlayer != null) {
             status += ", next player: " + nextPlayer.getName();
@@ -56,7 +53,7 @@ public class GameComponent extends VBox {
         statusLbl.setText(status);
     }
 
-    private void renderBoard(GameState gameState) {
+    private void renderBoard(GameEvent gameState) {
         gridPane.getChildren().clear();
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
@@ -75,9 +72,10 @@ public class GameComponent extends VBox {
                 }
             }
         }
+        gridPane.setGridLinesVisible(true);
     }
 
-    private String getCellFromState(GameState gameState, int col, int row) {
+    private String getCellFromState(GameEvent gameState, int col, int row) {
         List<BoardRow> rows = gameState.getBoard().getRowsList();
         if (row > rows.size()) {
             return " ";

@@ -8,13 +8,13 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.function.Consumer;
 
 import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
@@ -27,14 +27,15 @@ public class PlayerListComponent extends VBox {
 
     public PlayerListComponent(ObservableList<Player> players,
                                Runnable fetchPlayersCallback,
-                               SimpleObjectProperty<Player> myselfProperty) {
+                               SimpleObjectProperty<Player> myselfProperty,
+                               Consumer<Player> challengePlayerCallback) {
         this.myselfProperty = myselfProperty;
         this.setPadding(new Insets(5.0));
         fetchPlayersBtn.setOnAction(e -> fetchPlayersCallback.run());
         fetchPlayersBtn.setDisable(true);
         playersTable = createPlayerTableView(players);
         playersTable.setDisable(true);
-        startGameBtn.setOnAction(e -> startGame());
+        startGameBtn.setOnAction(e -> challengePlayer(challengePlayerCallback));
         startGameBtn.setDisable(true);
         this.getChildren().addAll(fetchPlayersBtn, playersLbl, playersTable, startGameBtn);
         VBox.setVgrow(playersTable, Priority.ALWAYS);
@@ -42,13 +43,13 @@ public class PlayerListComponent extends VBox {
         enableWhenPlayerHasJoined(myselfProperty);
     }
 
-    private void startGame() {
+    private void challengePlayer(Consumer<Player> challengePlayerCallback) {
         Player selectedOpponent = playersTable.getSelectionModel().getSelectedItem();
         Player myself = myselfProperty.get();
         if (myself != null && String.valueOf(myself.getName()).equals(selectedOpponent.getName())) {
             Modals.showPopup("Error", "You cannot play a game against yourself!\nOpen another window with a different player");
         } else {
-
+            challengePlayerCallback.accept(selectedOpponent);
         }
     }
 
@@ -92,6 +93,7 @@ public class PlayerListComponent extends VBox {
         myselfProperty.addListener((property, oldMyself, newMyself) -> {
             fetchPlayersBtn.setDisable(newMyself == null);
             playersTable.setDisable(newMyself == null);
+            startGameBtn.setDisable(newMyself == null);
         });
     }
 }
