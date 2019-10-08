@@ -19,10 +19,7 @@ plugins {
 }
 
 repositories {
-    maven {
-        // The google mirror is less flaky than mavenCentral()
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/"
-    }
+    mavenCentral()
     mavenLocal()
 }
 
@@ -31,10 +28,10 @@ javafx {
     modules = [ 'javafx.controls' ]
 }
 
-def grpcVersion = '1.23.0'
-def nettyTcNativeVersion = '2.0.22.Final'
-def protobufVersion = '3.9.0'
-def protocVersion = '3.9.0'
+def grpcVersion = '1.24.0'
+def nettyTcNativeVersion = '2.0.26.Final'
+def protobufVersion = '3.10.0'
+def protocVersion = '3.10.0'
 
 group 'nl.toefel'
 version '1.0-SNAPSHOT'

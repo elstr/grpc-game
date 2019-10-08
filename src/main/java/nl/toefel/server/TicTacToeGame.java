@@ -25,14 +25,12 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
   @Override
   public void testConnection(TestConnectionRequest request, StreamObserver<TestConnectionResponse> responseObserver) {
-    log("test connection call received");
     responseObserver.onNext(TestConnectionResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
   @Override
   public void listPlayers(ListPlayersRequest request, StreamObserver<ListPlayersResponse> responseObserver) {
-    log("listPlayers call received");
     withLockAndErrorHandling(() -> {
       ListPlayersResponse response = ListPlayersResponse.newBuilder().addAllPlayers(state.getPlayers()).build();
       responseObserver.onNext(response);
@@ -42,7 +40,6 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
   @Override
   public void createPlayer(CreatePlayerRequest request, StreamObserver<Player> responseObserver) {
-    log("createPlayer call received");
     withLockAndErrorHandling(() -> {
       Player player = state.createPlayer(request.getName());
       responseObserver.onNext(player);

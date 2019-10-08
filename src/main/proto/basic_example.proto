@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package nl.toefel.grpc.basic;
+
+message GreetingRequest {
+    string name = 1;
+}
+
+message GreetingResponse {
+    string greeting = 1;
+}
+
+service GreeterService {
+    rpc Greet (GreetingRequest) returns (GreetingResponse) {    }
+}
