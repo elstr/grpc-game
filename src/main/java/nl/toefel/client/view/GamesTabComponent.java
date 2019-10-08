@@ -33,18 +33,20 @@ public class GamesTabComponent extends TabPane {
 
     private void updateTabs(ObservableMap<String, GameEvent> gameStates, Consumer<BoardMove> moveCommandCallback) {
         for (GameEvent event : gameStates.values()) {
-            Tab tab = getOrCreateTab(event.getGameId());
+            Tab tab = getOrCreateTab(event);
             GameComponent gameComponent = new GameComponent(myself, event, moveCommandCallback);
             tab.setContent(gameComponent);
         }
     }
 
-  private Tab getOrCreateTab(String gameId) {
-    Map<String, Tab> tabsById = getTabs().stream().collect(toMap(Tab::getText, Function.identity()));
-    if (tabsById.containsKey(gameId)) {
-      return tabsById.get(gameId);
+  private Tab getOrCreateTab(GameEvent event) {
+    Map<String, Tab> tabsById = getTabs().stream().collect(toMap(Tab::getId, Function.identity()));
+    if (tabsById.containsKey(event.getGameId())) {
+      return tabsById.get(event.getGameId());
     }
-    Tab tab = new Tab(gameId);
+    String tabName = event.getPlayerO().getName() + " vs " + event.getPlayerX().getName();
+    Tab tab = new Tab(tabName);
+    tab.setId(event.getGameId());
     getTabs().add(tab);
     return tab;
   }

@@ -73,7 +73,6 @@ public class GrpcController {
           new StreamObserver<>() {
             @Override
             public void onNext(GameEvent gameEvent) {
-              System.out.println("Received game event " + gameEvent);
               state.getGameStates().put(gameEvent.getGameId(), gameEvent);
             }
 
@@ -124,15 +123,14 @@ public class GrpcController {
 //  }
 
   public void startGameAgainstPlayer(Player opponent) {
-    GameCommand challengePlayerCommand = GameCommand.newBuilder()
+    GameCommand startGameCommand = GameCommand.newBuilder()
         .setStartGame(StartGame.newBuilder()
             .setFromPlayer(state.getMyself())
             .setToPlayer(opponent))
         .build();
     StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
     if (gameCommandStream != null) {
-      System.out.println("Sending command: " + challengePlayerCommand);
-      gameCommandStream.onNext(challengePlayerCommand);
+      gameCommandStream.onNext(startGameCommand);
     } else {
       Modals.showPopup("Game command stream null", "The game command stream is null, connection lost?");
     }

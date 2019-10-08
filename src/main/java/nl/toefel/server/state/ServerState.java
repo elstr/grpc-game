@@ -118,7 +118,6 @@ public class ServerState {
           .build();
 
       games.put(boardMove.getGameId(), newEvent);
-      System.out.println("New move on game " + newEvent);
 
       findPlayerWithStreamByPlayerId(gameEvent.getPlayerO().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
       findPlayerWithStreamByPlayerId(gameEvent.getPlayerX().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
