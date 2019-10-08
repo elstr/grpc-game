@@ -1,6 +1,5 @@
 package nl.toefel.greeter;
 
-import io.grpc.ClientInterceptors;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import nl.toefel.grpc.basic.GreeterServiceGrpc;

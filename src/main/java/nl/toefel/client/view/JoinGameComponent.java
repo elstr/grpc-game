@@ -8,11 +8,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.util.function.Consumer;
 
-import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
 public class JoinGameComponent extends HBox {
     private TextField playerNameTxt = new TextField();

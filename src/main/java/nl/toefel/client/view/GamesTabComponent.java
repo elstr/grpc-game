@@ -6,10 +6,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableMap;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
+import nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
 import nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
 
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
@@ -19,19 +20,21 @@ public class GamesTabComponent extends TabPane {
 
   private final SimpleObjectProperty<Player> myself;
 
-  public GamesTabComponent(SimpleObjectProperty<Player> myself, ObservableMap<String, GameEvent> gameStates) {
+  public GamesTabComponent(SimpleObjectProperty<Player> myself,
+                           ObservableMap<String, GameEvent> gameStates,
+                           Consumer<BoardMove> moveCommandCallback) {
       this.myself = myself;
         gameStates.addListener((InvalidationListener) x -> {
             Platform.runLater(() -> {
-                createTabs(gameStates);
+                updateTabs(gameStates, moveCommandCallback);
             });
         });
     }
 
-    private void createTabs(ObservableMap<String, GameEvent> gameStates) {
+    private void updateTabs(ObservableMap<String, GameEvent> gameStates, Consumer<BoardMove> moveCommandCallback) {
         for (GameEvent event : gameStates.values()) {
             Tab tab = getOrCreateTab(event.getGameId());
-            GameComponent gameComponent = new GameComponent(myself, event);
+            GameComponent gameComponent = new GameComponent(myself, event, moveCommandCallback);
             tab.setContent(gameComponent);
         }
     }

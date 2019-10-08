@@ -3,7 +3,14 @@ package nl.toefel.server;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import nl.toefel.grpc.game.TicTacToeGrpc;
-import nl.toefel.grpc.game.TicTacToeOuterClass.*;
+import nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
+import nl.toefel.grpc.game.TicTacToeOuterClass.GameCommand;
+import nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
+import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
+import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
+import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
+import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
+import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionResponse;
 import nl.toefel.server.state.AlreadyExistsException;
 import nl.toefel.server.state.AutoClosableLocker;
 import nl.toefel.server.state.ServerState;
@@ -49,44 +56,10 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
 
   @Override
   public StreamObserver<GameCommand> playGame(StreamObserver<GameEvent> responseObserver) {
-    return new StreamObserver<>() {
+    StreamObserver<GameCommand> gameCommandStream = new StreamObserver<GameCommand>() {
       @Override
       public void onNext(GameCommand command) {
-        System.out.println(command);
-        switch (command.getCommandCase()){
-          case CHALLENGE_PLAYER:
-            GameEvent event = GameEvent.newBuilder()
-                .setGameId("1")
-                .setType(EventType.START_GAME)
-                .setNextPlayer(command.getChallengePlayer().getFromPlayer())
-                .setPlayerO(command.getChallengePlayer().getFromPlayer())
-                .setPlayerX(command.getChallengePlayer().getToPlayer())
-                .setBoard(createEmptyBoard())
-                .build();
-            responseObserver.onNext(event);
-            break;
-          case ACCEPT_CHALLENGE:
-            break;
-          case BOARD_MOVE:
-            break;
-          case END_GAME:
-            break;
-          case COMMAND_NOT_SET:
-            break;
-        }
-
-      }
-
-      private Board createEmptyBoard() {
-        return Board.newBuilder()
-            .addRows(createEmptyRow())
-            .addRows(createEmptyRow())
-            .addRows(createEmptyRow())
-            .build();
-      }
-
-      private BoardRow createEmptyRow() {
-        return BoardRow.newBuilder().addColumns("").addColumns("").addColumns("").build();
+        state.onGameCommand(this, command);
       }
 
       @Override
@@ -99,6 +72,8 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
         System.out.println("on completed");
       }
     };
+    state.trackSteam(gameCommandStream, responseObserver);
+    return gameCommandStream;
   }
 
   /**

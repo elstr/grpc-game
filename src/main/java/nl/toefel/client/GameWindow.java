@@ -1,20 +1,17 @@
 package nl.toefel.client;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import nl.toefel.client.controller.GrpcController;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.ConnectComponent;
-import nl.toefel.client.view.GameComponent;
 import nl.toefel.client.view.GamesTabComponent;
 import nl.toefel.client.view.JoinGameComponent;
 import nl.toefel.client.view.PlayerListComponent;
-
-import java.lang.ref.PhantomReference;
 
 public class GameWindow extends Application {
 
@@ -35,8 +32,8 @@ public class GameWindow extends Application {
 
         ConnectComponent connectComponent = new ConnectComponent(controller::connectToServer, state.getGrpcConnectionProperty());
         JoinGameComponent joinGameComponent = new JoinGameComponent(controller::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
-        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty(), controller::challengePlayer);
-        GamesTabComponent gameTabs = new GamesTabComponent(state.getMyselfProperty(), state.getGameStates());
+        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty(), controller::startGameAgainstPlayer);
+        GamesTabComponent gameTabs = new GamesTabComponent(state.getMyselfProperty(), state.getGameStates(), controller::makeBoardMove);
 
         HBox listAndGameLayout = new HBox(playerListComponent, gameTabs);
         HBox.setHgrow(playerListComponent, Priority.ALWAYS);
@@ -48,8 +45,6 @@ public class GameWindow extends Application {
         Scene scene = new Scene(mainLayout, 1024, 800);
         stage.setScene(scene);
         stage.show();
-
-        controller.addTestGame();
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,5 @@
 package nl.toefel.client.view;
 
-import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;

@@ -3,14 +3,20 @@ syntax = "proto3";
 package nl.toefel.grpc.game;
 
 service TicTacToe {
-    rpc TestConnection (TestConnectionRequest) returns (TestConnectionResponse) {    }
-    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {    }
-    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) {    }
-    rpc PlayGame (stream GameCommand) returns (stream GameEvent) {    }
+    rpc TestConnection (TestConnectionRequest) returns (TestConnectionResponse) {
+    }
+    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {
+    }
+    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) {
+    }
+    rpc PlayGame (stream GameCommand) returns (stream GameEvent) {
+    }
 }
 
-message TestConnectionRequest {}
-message TestConnectionResponse {}
+message TestConnectionRequest {
+}
+message TestConnectionResponse {
+}
 
 message CreatePlayerRequest {
     string name = 1;
@@ -23,40 +29,36 @@ message Player {
     int32 wins = 4;
 }
 
-message ListPlayersRequest { }
+message ListPlayersRequest {
+}
 message ListPlayersResponse {
     repeated Player players = 1;
 }
 
 message GameCommand {
     oneof command {
-        ChallengePlayer challenge_player = 1;
-        AcceptChallenge accept_challenge = 2;
-        BoardMove board_move = 3;
-        EndGame end_game = 4;
+        Identify identify = 1;
+        StartGame start_game = 2;
+        BoardMove board_move = 4;
     }
 }
 
-message ChallengePlayer {
+// command that identifies the player (TODO use metadata or call credentials)
+message Identify {
+    Player player = 1;
+}
+
+// command that invites another player to play a game
+message StartGame {
     Player from_player = 2;
     Player to_player = 3;
 }
 
-message AcceptChallenge {
-    string game_id = 1;
-    bool accepted = 2;
-}
-
+// a board move
 message BoardMove {
     string game_id = 1;
     int32 row = 2;
     int32 column = 3;
-}
-
-message EndGame {
-    string game_id = 1;
-    string status = 2;
-    Player winner = 3;
 }
 
 message GameEvent {
@@ -69,10 +71,9 @@ message GameEvent {
 }
 
 enum EventType {
-    CHALLENGE_GAME = 0;
-    START_GAME = 1;
-    BOARD_MOVE = 2;
-    END_GAME = 3;
+    START_GAME = 0;
+    BOARD_MOVE = 1;
+    END_GAME = 2;
 }
 
 message Board {
