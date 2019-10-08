@@ -3,14 +3,22 @@ package nl.toefel.client.controller;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import nl.toefel.client.state.ClientState;
 import nl.toefel.client.view.Modals;
+import nl.toefel.grpc.game.TicTacToeOuterClass;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
+import static nl.toefel.grpc.game.TicTacToeGrpc.newStub;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.CreatePlayerRequest;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersRequest;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
+import static nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
 
 public class GrpcController {
 
@@ -43,6 +51,8 @@ public class GrpcController {
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
       state.setMyself(player);
+
+      initializeGameStream();
     });
   }
 
@@ -51,6 +61,38 @@ public class GrpcController {
       var listPlayersRequest = ListPlayersRequest.newBuilder().build();
       ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection()).listPlayers(listPlayersRequest);
       state.replaceAllPlayers(listPlayersResponse.getPlayersList());
+    });
+  }
+
+  public void initializeGameStream() {
+    showDialogOnError(() -> {
+      var choiceStreamObserver = newStub(state.getGrpcConnection()).playGame(
+          new StreamObserver<>() {
+            @Override
+            public void onNext(GameEvent gameEvent) {
+              switch (gameEvent.getType()) {
+                case CHALLENGE_GAME:
+                case START_GAME:
+                case BOARD_MOVE:
+                case END_GAME:
+                case UNRECOGNIZED:
+                default:
+                  System.out.println("Received game event " + gameEvent);
+              }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+              throwable.printStackTrace();
+            }
+
+            @Override
+            public void onCompleted() {
+              System.out.println("On Completed");
+            }
+          }
+      );
+      state.setGameCommandStream(choiceStreamObserver);
     });
   }
 

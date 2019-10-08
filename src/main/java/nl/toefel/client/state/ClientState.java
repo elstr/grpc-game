@@ -3,16 +3,20 @@ package nl.toefel.client.state;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import nl.toefel.client.view.Modals;
 import nl.toefel.grpc.game.TicTacToeOuterClass;
-import nl.toefel.grpc.game.TicTacToeOuterClass.GameState;
+import nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import static nl.toefel.grpc.game.TicTacToeOuterClass.GameCommand;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 
 /**
@@ -35,8 +39,11 @@ public class ClientState {
   // Observable list with all the players
   private final ObservableList<Player> players = FXCollections.observableArrayList();
 
-  // The state of the current active game
-  private final SimpleObjectProperty<GameState> gameStateProperty = new SimpleObjectProperty<>(null);
+  // Maps gameId to the latest game event, insertion ordered
+  private final ObservableMap<String, GameEvent> gameStates = FXCollections.observableMap(new LinkedHashMap<>());
+
+  // The event stream
+  private final SimpleObjectProperty<StreamObserver<GameCommand>> gameCommandStream = new SimpleObjectProperty<>(null);
 
   public void setGrpcConnection(ManagedChannel grpcConnection) {
     this.grpcConnection = grpcConnection;
@@ -55,7 +62,7 @@ public class ClientState {
       myself = null;
       myselfProperty.set(null);
       players.clear();
-      gameStateProperty.set(null);
+      gameCommandStream.set(null);
     });
   }
 
@@ -97,7 +104,15 @@ public class ClientState {
     return players;
   }
 
-  public SimpleObjectProperty<GameState> getGameStateProperty() {
-    return gameStateProperty;
+  public StreamObserver<GameCommand> getGameCommandStream() {
+    return gameCommandStream.get();
+  }
+
+  public void setGameCommandStream(StreamObserver<GameCommand> gameCommandStream) {
+    this.gameCommandStream.set(gameCommandStream);
+  }
+
+  public ObservableMap<String, GameEvent> getGameStates() {
+    return gameStates;
   }
 }
