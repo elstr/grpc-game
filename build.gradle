@@ -92,10 +92,13 @@ sourceSets {
     }
 }
 
-mainClassName = "nl.toefel.client.application.ClientMain"
+task runClient(type:JavaExec) {
+    main = "nl.toefel.client.ClientMain"
+    classpath = sourceSets.main.runtimeClasspath
+}
 
-task execute(type:JavaExec) {
-    main = mainClass
+task runServer(type:JavaExec) {
+    main = "nl.toefel.server.ServerMain"
     classpath = sourceSets.main.runtimeClasspath
 }
 
