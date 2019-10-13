@@ -1,4 +1,4 @@
-package nl.toefel.client;
+package nl.toefel.tictactoe.client;
 
 public class ClientMain {
     public static void main(String[] args) {

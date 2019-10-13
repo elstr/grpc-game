@@ -1,4 +1,4 @@
-package nl.toefel.server.state;
+package nl.toefel.tictactoe.server.state;
 
 import java.util.concurrent.locks.Lock;
 

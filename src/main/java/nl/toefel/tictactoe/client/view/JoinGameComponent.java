@@ -1,4 +1,4 @@
-package nl.toefel.client.view;
+package nl.toefel.tictactoe.client.view;
 
 import io.grpc.ManagedChannel;
 import javafx.beans.property.SimpleObjectProperty;

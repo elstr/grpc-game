@@ -1,4 +1,4 @@
-package nl.toefel.client.view;
+package nl.toefel.tictactoe.client.view;
 
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;

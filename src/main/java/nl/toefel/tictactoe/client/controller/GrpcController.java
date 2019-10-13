@@ -1,11 +1,11 @@
-package nl.toefel.client.controller;
+package nl.toefel.tictactoe.client.controller;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import nl.toefel.client.state.ClientState;
-import nl.toefel.client.view.Modals;
+import nl.toefel.tictactoe.client.state.ClientState;
+import nl.toefel.tictactoe.client.view.Modals;
 import nl.toefel.grpc.game.TicTacToeOuterClass;
 import nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
 

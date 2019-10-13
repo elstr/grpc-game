@@ -1,8 +1,8 @@
-package nl.toefel.server;
+package nl.toefel.tictactoe.server;
 
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
-import nl.toefel.server.state.ServerState;
+import nl.toefel.tictactoe.server.state.ServerState;
 
 import java.io.IOException;
 

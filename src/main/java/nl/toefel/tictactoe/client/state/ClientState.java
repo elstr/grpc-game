@@ -1,4 +1,4 @@
-package nl.toefel.client.state;
+package nl.toefel.tictactoe.client.state;
 
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
@@ -9,7 +9,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import nl.toefel.client.view.Modals;
+import nl.toefel.tictactoe.client.view.Modals;
 import nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
 
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-package nl.toefel.server;
+package nl.toefel.tictactoe.server;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -11,9 +11,9 @@ import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
 import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionResponse;
-import nl.toefel.server.state.AlreadyExistsException;
-import nl.toefel.server.state.AutoClosableLocker;
-import nl.toefel.server.state.ServerState;
+import nl.toefel.tictactoe.server.state.AlreadyExistsException;
+import nl.toefel.tictactoe.server.state.AutoClosableLocker;
+import nl.toefel.tictactoe.server.state.ServerState;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

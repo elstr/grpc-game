@@ -1,4 +1,4 @@
-package nl.toefel.server.state;
+package nl.toefel.tictactoe.server.state;
 
 import io.grpc.stub.StreamObserver;
 import nl.toefel.grpc.game.TicTacToeOuterClass.GameCommand;

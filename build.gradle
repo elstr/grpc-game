@@ -93,12 +93,12 @@ sourceSets {
 }
 
 task runClient(type:JavaExec) {
-    main = "nl.toefel.client.ClientMain"
+    main = "nl.toefel.tictactoe.client.ClientMain"
     classpath = sourceSets.main.runtimeClasspath
 }
 
 task runServer(type:JavaExec) {
-    main = "nl.toefel.server.ServerMain"
+    main = "nl.toefel.tictactoe.server.ServerMain"
     classpath = sourceSets.main.runtimeClasspath
 }
 

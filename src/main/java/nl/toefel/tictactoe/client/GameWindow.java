@@ -1,4 +1,4 @@
-package nl.toefel.client;
+package nl.toefel.tictactoe.client;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -6,12 +6,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import nl.toefel.client.controller.GrpcController;
-import nl.toefel.client.state.ClientState;
-import nl.toefel.client.view.ConnectComponent;
-import nl.toefel.client.view.GamesTabComponent;
-import nl.toefel.client.view.JoinGameComponent;
-import nl.toefel.client.view.PlayerListComponent;
+import nl.toefel.tictactoe.client.controller.GrpcController;
+import nl.toefel.tictactoe.client.state.ClientState;
+import nl.toefel.tictactoe.client.view.ConnectComponent;
+import nl.toefel.tictactoe.client.view.GamesTabComponent;
+import nl.toefel.tictactoe.client.view.JoinGameComponent;
+import nl.toefel.tictactoe.client.view.PlayerListComponent;
 
 public class GameWindow extends Application {
 

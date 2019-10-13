@@ -7,9 +7,9 @@ Some quick guidelines
 * Run `./gradlew generateProto` to generate client, server and message classes, run this command after you  
 
 
-Run server `./gradlew -PmainClass=nl.toefel.server.ServerMain execute`
+Run server `./gradlew runServer`
 
-Run client `./gradlew -PmainClass=nl.toefel.client.ClientMain execute`
+Run client `./gradlew runClient`
 
 
 ### Scaling issues on Linux

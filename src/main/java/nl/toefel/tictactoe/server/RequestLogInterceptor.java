@@ -1,4 +1,4 @@
-package nl.toefel.server;
+package nl.toefel.tictactoe.server;
 
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
