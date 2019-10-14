@@ -2,16 +2,11 @@ package nl.toefel.tictactoe.client.controller;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
 import nl.toefel.tictactoe.client.auth.PlayerIdCredentials;
 import nl.toefel.tictactoe.client.state.ClientState;
 import nl.toefel.tictactoe.client.view.Modals;
-import nl.toefel.grpc.game.TicTacToeOuterClass;
-import nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
 import static nl.toefel.grpc.game.TicTacToeGrpc.newStub;
@@ -24,20 +19,20 @@ import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.StartGame;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
 
-public class GrpcController {
-
-  // Executor to run all tasks coming from the UI on worker threads
-  private final Executor executor = Executors.newFixedThreadPool(8);
+/**
+ * Controller that receives events from the window, like clicks on buttons and clicks within game fields.
+ */
+public class GrpcTicTacToeClientController implements TicTacToeClientController {
 
   // Contains the game state used by the JavaFX application
   private final ClientState state;
 
-  public GrpcController(ClientState state) {
+  public GrpcTicTacToeClientController(ClientState state) {
     this.state = state;
   }
 
+  @Override
   public void connectToServer(String host, String port) {
-    showDialogOnError(() -> {
       ManagedChannel grpcConnection = ManagedChannelBuilder
           .forAddress(host, Integer.parseInt(port))
           .usePlaintext()
@@ -47,20 +42,18 @@ public class GrpcController {
       newBlockingStub(grpcConnection).testConnection(TestConnectionRequest.newBuilder().build());
 
       state.setGrpcConnection(grpcConnection);
-    });
   }
 
+  @Override
   public void createPlayer(String playerName) {
-    showDialogOnError(() -> {
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
       state.setMyself(player);
       initializeGameStream();
-    });
   }
 
+  @Override
   public void initializeGameStream() {
-    showDialogOnError(() -> {
       var commandStreamObserver = newStub(state.getGrpcConnection())
           .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
           .playGame(
@@ -72,29 +65,28 @@ public class GrpcController {
 
             @Override
             public void onError(Throwable throwable) {
-              throwable.printStackTrace();
+              state.onGameStreamError(throwable);
             }
 
             @Override
             public void onCompleted() {
-              Modals.showPopup("Completed", "game event stream completed");
+              state.onGameStreamCompleted();
             }
           }
       );
       state.setGameCommandStream(commandStreamObserver);
-    });
   }
 
+  @Override
   public void listPlayers() {
-    showDialogOnError(() -> {
       var listPlayersRequest = ListPlayersRequest.newBuilder().build();
       ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
           .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
           .listPlayers(listPlayersRequest);
       state.replaceAllPlayers(listPlayersResponse.getPlayersList());
-    });
   }
 
+  @Override
   public void startGameAgainstPlayer(Player opponent) {
     GameCommand startGameCommand = GameCommand.newBuilder()
         .setStartGame(StartGame.newBuilder()
@@ -109,21 +101,11 @@ public class GrpcController {
     }
   }
 
+  @Override
   public void makeBoardMove(BoardMove move) {
     StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
     if (gameCommandStream != null) {
       gameCommandStream.onNext(GameCommand.newBuilder().setBoardMove(move).build());
-    }
-  }
-
-  public void showDialogOnError(Runnable runnable) {
-    try {
-      runnable.run();
-    } catch (Throwable t) {
-      // Status gives an idea of the error cause (like UNAVAILABLE or DEADLINE_EXCEEDED)
-      // it also contains the underlying exception
-      Status status = Status.fromThrowable(t);
-      Modals.showGrpcError("Error", status);
     }
   }
 }

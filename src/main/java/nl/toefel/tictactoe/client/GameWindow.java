@@ -6,7 +6,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import nl.toefel.tictactoe.client.controller.GrpcController;
+import nl.toefel.tictactoe.client.controller.DialogOnErrorClientControllerDecorator;
+import nl.toefel.tictactoe.client.controller.TicTacToeClientController;
+import nl.toefel.tictactoe.client.controller.GrpcTicTacToeClientController;
 import nl.toefel.tictactoe.client.state.ClientState;
 import nl.toefel.tictactoe.client.view.ConnectComponent;
 import nl.toefel.tictactoe.client.view.GamesTabComponent;
@@ -16,11 +18,11 @@ import nl.toefel.tictactoe.client.view.PlayerListComponent;
 public class GameWindow extends Application {
 
     private ClientState state;
-    private GrpcController controller;
+    private TicTacToeClientController ticTacToeClient;
 
     public GameWindow() {
         state = new ClientState();
-        controller = new GrpcController(state);
+        ticTacToeClient = new DialogOnErrorClientControllerDecorator(new GrpcTicTacToeClientController(state));
     }
 
     @Override
@@ -30,10 +32,10 @@ public class GameWindow extends Application {
         System.out.println(javaVersion);
         System.out.println(javafxVersion);
 
-        ConnectComponent connectComponent = new ConnectComponent(controller::connectToServer, state.getGrpcConnectionProperty());
-        JoinGameComponent joinGameComponent = new JoinGameComponent(controller::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
-        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), controller::listPlayers, state.getMyselfProperty(), controller::startGameAgainstPlayer);
-        GamesTabComponent gameTabs = new GamesTabComponent(state.getMyselfProperty(), state.getGameStates(), controller::makeBoardMove);
+        ConnectComponent connectComponent = new ConnectComponent(ticTacToeClient::connectToServer, state.getGrpcConnectionProperty());
+        JoinGameComponent joinGameComponent = new JoinGameComponent(ticTacToeClient::createPlayer, state.getGrpcConnectionProperty(), state.getMyselfProperty());
+        PlayerListComponent playerListComponent = new PlayerListComponent(state.getPlayers(), ticTacToeClient::listPlayers, state.getMyselfProperty(), ticTacToeClient::startGameAgainstPlayer);
+        GamesTabComponent gameTabs = new GamesTabComponent(state.getMyselfProperty(), state.getGameStates(), ticTacToeClient::makeBoardMove);
 
         HBox listAndGameLayout = new HBox(playerListComponent, gameTabs);
         HBox.setHgrow(playerListComponent, Priority.ALWAYS);

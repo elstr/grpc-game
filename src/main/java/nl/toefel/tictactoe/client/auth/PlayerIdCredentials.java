@@ -7,7 +7,7 @@ import io.grpc.Status;
 import java.util.concurrent.Executor;
 
 /**
- * Sends the player name in the auth header as identification.
+ * Sends the player id in the auth header as identification.
  */
 public class PlayerIdCredentials extends CallCredentials {
 

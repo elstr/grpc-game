@@ -53,6 +53,10 @@ public class ClientState {
     });
   }
 
+  public void disconnect() {
+    this.reset();
+  }
+
   private void reset() {
     Platform.runLater(() -> {
       grpcConnection.shutdownNow();
@@ -86,10 +90,6 @@ public class ClientState {
     return myselfProperty;
   }
 
-  public SimpleObjectProperty<Player> myselfPropertyProperty() {
-    return myselfProperty;
-  }
-
   public void replaceAllPlayers(List<Player> newPlayers) {
     // dispatch on UI thread
     Platform.runLater(() -> {
@@ -113,5 +113,15 @@ public class ClientState {
 
   public ObservableMap<String, GameEvent> getGameStates() {
     return gameStates;
+  }
+
+  public void onGameStreamError(Throwable throwable) {
+    Modals.showGrpcError("Error received from the game stream", Status.fromThrowable(throwable));
+    this.reset();
+  }
+
+  public void onGameStreamCompleted() {
+    Modals.showPopup("Game stream completed", "Closing connections");
+    this.reset();
   }
 }
