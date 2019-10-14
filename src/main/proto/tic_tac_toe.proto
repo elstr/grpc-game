@@ -3,20 +3,14 @@ syntax = "proto3";
 package nl.toefel.grpc.game;
 
 service TicTacToe {
-    rpc TestConnection (TestConnectionRequest) returns (TestConnectionResponse) {
-    }
-    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {
-    }
-    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) {
-    }
-    rpc PlayGame (stream GameCommand) returns (stream GameEvent) {
-    }
+    rpc TestConnection (TestConnectionRequest) returns (TestConnectionResponse) {    }
+    rpc CreatePlayer (CreatePlayerRequest) returns (Player) {    }
+    rpc ListPlayers (ListPlayersRequest) returns (ListPlayersResponse) {    }
+    rpc PlayGame (stream GameCommand) returns (stream GameEvent) {    }
 }
 
-message TestConnectionRequest {
-}
-message TestConnectionResponse {
-}
+message TestConnectionRequest {}
+message TestConnectionResponse {}
 
 message CreatePlayerRequest {
     string name = 1;
@@ -29,23 +23,16 @@ message Player {
     int32 wins = 4;
 }
 
-message ListPlayersRequest {
-}
+message ListPlayersRequest {   }
 message ListPlayersResponse {
     repeated Player players = 1;
 }
 
 message GameCommand {
     oneof command {
-        Identify identify = 1;
         StartGame start_game = 2;
         BoardMove board_move = 4;
     }
-}
-
-// command that identifies the player (TODO use metadata or call credentials)
-message Identify {
-    Player player = 1;
 }
 
 // command that invites another player to play a game
@@ -73,7 +60,7 @@ message GameEvent {
 enum EventType {
     START_GAME = 0;
     BOARD_MOVE = 1;
-    END_GAME = 2;
+    OTHER_PLAYER_LEFT = 2;
 }
 
 message Board {

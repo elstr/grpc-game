@@ -1,16 +1,19 @@
 package nl.toefel.tictactoe.server.state;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import nl.toefel.grpc.game.TicTacToeOuterClass.Identify;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 import nl.toefel.grpc.game.TicTacToeOuterClass.StartGame;
+import nl.toefel.tictactoe.server.auth.Contexts;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static nl.toefel.grpc.game.TicTacToeOuterClass.Board;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
@@ -20,72 +23,100 @@ import static nl.toefel.grpc.game.TicTacToeOuterClass.GameCommand;
 import static nl.toefel.grpc.game.TicTacToeOuterClass.GameEvent;
 
 public class ServerState {
+
   private AtomicInteger playerIdSequence = new AtomicInteger(1);
-  private List<Player> players = new ArrayList<>();
-  private List<PlayerWithStreams> playerWithStreams = new ArrayList<>();
   private AtomicInteger gameIdSequence = new AtomicInteger(1);
-  // a game event contains the latest state of a game
+
+  private List<Player> createdPlayers = new ArrayList<>();
+
+  // List of tuples with players and their input/output stream.
+  private List<PlayerWithIO> joinedPlayers = new ArrayList<>();
+
+  // Maps gameId to GameEvent, a game event contains the latest state of a game
   private Map<String, GameEvent> games = new HashMap<>();
 
-
-  public List<Player> getPlayers() {
-    return new ArrayList<>(players);
+  public List<Player> getJoinedPlayers() {
+    return joinedPlayers.stream()
+        .map(PlayerWithIO::getPlayer)
+        .collect(Collectors.toList());
   }
 
-  public Player createPlayer(String name) {
-    if (players.stream().anyMatch(p -> p.getName().equals(name))) {
-      throw new AlreadyExistsException("player with name " + name + " already exists");
-    }
-
-    Player player = Player.newBuilder()
+  public Player createNewPlayer(String name) {
+    Player newPlayer = Player.newBuilder()
         .setId(String.valueOf(playerIdSequence.getAndIncrement()))
         .setName(name)
         .setJoinTimestamp(System.currentTimeMillis())
         .setWins(0)
         .build();
 
-    players.add(player); // and publish
+    createdPlayers.add(newPlayer);
 
-    return player;
+    return newPlayer;
   }
 
-  public void trackSteam(StreamObserver<GameCommand> gameCommandStream, StreamObserver<GameEvent> responseObserver) {
-    PlayerWithStreams playerWithChannels = new PlayerWithStreams(null, gameCommandStream, responseObserver);
-    this.playerWithStreams.add(playerWithChannels);
+  public void joinPlayerAndTrack(StreamObserver<GameCommand> gameCommandStream, StreamObserver<GameEvent> responseObserver) {
+    String playerId = Contexts.PLAYER_ID.get();
+    Optional<PlayerWithIO> existingJoinedPlayer = findPlayerWithIOPlayerId(playerId);
+    Optional<Player> playerToBeJoined = createdPlayers.stream().filter(it -> Objects.equals(it.getId(), playerId)).findFirst();
+
+    if (existingJoinedPlayer.isPresent()) {
+      // onError closes the stream
+      responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("player with id " + playerId + " has already joined!").asException());
+    } else if (playerToBeJoined.isEmpty()) {
+      responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("player with id " +playerId + " does not exist, create player first!!").asException());
+    } else {
+      PlayerWithIO playerWithIO = new PlayerWithIO(playerToBeJoined.get(), gameCommandStream, responseObserver);
+      this.joinedPlayers.add(playerWithIO);
+    }
   }
 
-  public void onGameCommand(StreamObserver<GameCommand> commandStream, GameCommand command) {
-    System.out.println(command);
+  public void unjoinPlayer() {
+    String playerId = Contexts.PLAYER_ID.get();
+    Optional<PlayerWithIO> existingJoinedPlayer = findPlayerWithIOPlayerId(playerId);
+    if (existingJoinedPlayer.isPresent()) {
+      PlayerWithIO playerWithIO = existingJoinedPlayer.get();
+      System.out.println("Unjoining player " + playerId);
+      joinedPlayers.remove(playerWithIO);
+      closeActiveGamesOfUnjoinedPlayer(playerWithIO);
+    } else {
+      System.out.println("Unjoining player " + playerId + ", but player does not exist anymore");
+    }
+  }
+
+  private void closeActiveGamesOfUnjoinedPlayer(PlayerWithIO playerWithIO) {
+    games.values().stream()
+        .filter(game -> eq(game.getPlayerX(), playerWithIO.getPlayer()) || eq(game.getPlayerO(), playerWithIO.getPlayer()))
+        .collect(Collectors.toList()) // to avoid concurrent
+        .forEach(game -> closeGame(game, playerWithIO));
+  }
+
+  private void closeGame(GameEvent game, PlayerWithIO playerWithIO) {
+    Player opponent = eq(game.getPlayerO(), playerWithIO.getPlayer()) ? game.getPlayerX() : game.getPlayerO();
+    findPlayerWithIOPlayerId(opponent.getId()).ifPresent(opponentWithIo -> {
+      GameEvent closeEvent = game.toBuilder().setType(EventType.OTHER_PLAYER_LEFT).build();
+      opponentWithIo.getEventStream().onNext(closeEvent);
+    });
+    games.remove(game.getGameId());
+  }
+
+  public void onGameCommand(GameCommand command) {
     switch (command.getCommandCase()) {
-      case IDENTIFY:
-        // Identify is required because when opening the stream we do not know which player is opening the stream,
-        // When another player wants to challenge another player, we need to find the GameEvent stream that leads to the player.
-        // TODO change to metadata
-        linkPlayerToStream(commandStream, command.getIdentify());
-        break;
       case START_GAME:
-        startGameBetweenTwoPlayers(commandStream, command.getStartGame());
+        startGameBetweenTwoPlayers(command.getStartGame());
         break;
       case BOARD_MOVE:
-        processPlayerMove(commandStream, command.getBoardMove());
+        String playerId = Contexts.PLAYER_ID.get();
+        Optional<PlayerWithIO> playerMakingMove = findPlayerWithIOPlayerId(playerId);
+        processPlayerMove(playerMakingMove, command.getBoardMove());
         break;
       default:
         System.out.println("Unknown command " + command);
     }
   }
 
-  private void linkPlayerToStream(StreamObserver<GameCommand> commandStream, Identify identifyCommand) {
-    playerWithStreams.stream()
-        .filter(it -> it.getCommandStream() == commandStream)
-        .findFirst()
-        .ifPresentOrElse(
-            it -> it.setPlayer(identifyCommand.getPlayer()),
-            () -> System.out.println("no stream found to link player to, player: " + identifyCommand));
-  }
-
-  private void startGameBetweenTwoPlayers(StreamObserver<GameCommand> commandStream, StartGame startGameCommand) {
-    Optional<PlayerWithStreams> fromPlayer = findPlayerWithStreamByPlayerId(startGameCommand.getFromPlayer().getId());
-    Optional<PlayerWithStreams> toPlayer = findPlayerWithStreamByPlayerId(startGameCommand.getToPlayer().getId());
+  private void startGameBetweenTwoPlayers(StartGame startGameCommand) {
+    Optional<PlayerWithIO> fromPlayer = findPlayerWithIOPlayerId(startGameCommand.getFromPlayer().getId());
+    Optional<PlayerWithIO> toPlayer = findPlayerWithIOPlayerId(startGameCommand.getToPlayer().getId());
 
     if (fromPlayer.isPresent() && toPlayer.isPresent()) {
       GameEvent event = createNewGame(startGameCommand);
@@ -100,9 +131,8 @@ public class ServerState {
     }
   }
 
-  private void processPlayerMove(StreamObserver<GameCommand> commandStream, BoardMove boardMove) {
+  private void processPlayerMove(Optional<PlayerWithIO> playerMakingMove, BoardMove boardMove) {
     GameEvent gameEvent = games.get(boardMove.getGameId());
-    Optional<PlayerWithStreams> playerMakingMove = findPlayerWithStreamByCommandStream(commandStream);
 
     if (gameEvent == null) {
       System.out.println("Requested board move for nonexisting game " + boardMove);
@@ -119,8 +149,8 @@ public class ServerState {
 
       games.put(boardMove.getGameId(), newEvent);
 
-      findPlayerWithStreamByPlayerId(gameEvent.getPlayerO().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
-      findPlayerWithStreamByPlayerId(gameEvent.getPlayerX().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
+      findPlayerWithIOPlayerId(gameEvent.getPlayerO().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
+      findPlayerWithIOPlayerId(gameEvent.getPlayerX().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
     }
   }
 
@@ -158,15 +188,15 @@ public class ServerState {
         .build();
   }
 
-  private Optional<PlayerWithStreams> findPlayerWithStreamByPlayerId(String playerId) {
-    return playerWithStreams.stream()
+  private Optional<PlayerWithIO> findPlayerWithIOPlayerId(String playerId) {
+    return joinedPlayers.stream()
         .filter(it -> it.getPlayer() != null)
         .filter(it -> playerId.equals(it.getPlayer().getId()))
         .findFirst();
   }
 
-  private Optional<PlayerWithStreams> findPlayerWithStreamByCommandStream(StreamObserver<GameCommand> commandStream) {
-    return playerWithStreams.stream()
+  private Optional<PlayerWithIO> findPlayerWithIOByCommandStream(StreamObserver<GameCommand> commandStream) {
+    return joinedPlayers.stream()
         .filter(it -> commandStream == it.getCommandStream())
         .findFirst();
   }

@@ -2,6 +2,8 @@ package nl.toefel.tictactoe.server;
 
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+import nl.toefel.tictactoe.server.auth.PlayerIdInterceptor;
+import nl.toefel.tictactoe.server.controller.TicTacToeServerController;
 import nl.toefel.tictactoe.server.state.ServerState;
 
 import java.io.IOException;
@@ -11,7 +13,8 @@ public class ServerMain {
         ServerState state = new ServerState();
         Server service = NettyServerBuilder.forPort(8080)
             .intercept(new RequestLogInterceptor())
-            .addService(new TicTacToeGame(state))
+            .intercept(new PlayerIdInterceptor())
+            .addService(new TicTacToeServerController(state))
             .build()
             .start();
 

@@ -50,7 +50,7 @@ public class PlayerListComponent extends VBox {
     private void challengePlayer(Consumer<Player> challengePlayerCallback) {
         Player selectedOpponent = playersTable.getSelectionModel().getSelectedItem();
         Player myself = myselfProperty.get();
-        if (myself != null && String.valueOf(myself.getName()).equals(selectedOpponent.getName())) {
+        if (myself != null && selectedOpponent != null && String.valueOf(myself.getName()).equals(selectedOpponent.getName())) {
             Modals.showPopup("Error", "You cannot play a game against yourself!\nOpen another window with a different player");
         } else {
             challengePlayerCallback.accept(selectedOpponent);

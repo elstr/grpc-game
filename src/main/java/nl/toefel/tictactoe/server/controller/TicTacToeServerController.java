@@ -1,4 +1,4 @@
-package nl.toefel.tictactoe.server;
+package nl.toefel.tictactoe.server.controller;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -20,12 +20,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
+public class TicTacToeServerController extends TicTacToeGrpc.TicTacToeImplBase {
 
   private final Lock lock;
   private final ServerState state;
 
-  public TicTacToeGame(ServerState state) {
+  public TicTacToeServerController(ServerState state) {
     this.state = state;
     this.lock = new ReentrantLock();
   }
@@ -37,51 +37,52 @@ public class TicTacToeGame extends TicTacToeGrpc.TicTacToeImplBase {
   }
 
   @Override
-  public void listPlayers(ListPlayersRequest request, StreamObserver<ListPlayersResponse> responseObserver) {
-    withLockAndErrorHandling(() -> {
-      ListPlayersResponse response = ListPlayersResponse.newBuilder().addAllPlayers(state.getPlayers()).build();
-      responseObserver.onNext(response);
-      responseObserver.onCompleted();
-    }, responseObserver);
-  }
-
-  @Override
   public void createPlayer(CreatePlayerRequest request, StreamObserver<Player> responseObserver) {
     withLockAndErrorHandling(() -> {
-      Player player = state.createPlayer(request.getName());
+      Player player = state.createNewPlayer(request.getName());
       responseObserver.onNext(player);
       responseObserver.onCompleted();
     }, responseObserver);
   }
 
   @Override
+  public void listPlayers(ListPlayersRequest request, StreamObserver<ListPlayersResponse> responseObserver) {
+    withLockAndErrorHandling(() -> {
+      ListPlayersResponse response = ListPlayersResponse.newBuilder().addAllPlayers(state.getJoinedPlayers()).build();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }, responseObserver);
+  }
+
+  // TODO wrap calls to state in locks
+  @Override
   public StreamObserver<GameCommand> playGame(StreamObserver<GameEvent> responseObserver) {
     StreamObserver<GameCommand> gameCommandStream = new StreamObserver<GameCommand>() {
       @Override
       public void onNext(GameCommand command) {
-        state.onGameCommand(this, command);
+        state.onGameCommand(command);
       }
 
       @Override
       public void onError(Throwable t) {
-        t.printStackTrace();
+        state.unjoinPlayer();
       }
 
       @Override
       public void onCompleted() {
-        System.out.println("on completed");
+        state.unjoinPlayer();
       }
     };
 
-    state.trackSteam(gameCommandStream, responseObserver);
+    // Register this game stream so we we can distribute events from other players to it at a later time.
+    state.joinPlayerAndTrack(gameCommandStream, responseObserver);
+
     return gameCommandStream;
   }
 
   /**
    * Runs code within the global lock and handles errors by re-throwing them as a grpc Status which is understood
    * by the grpc system.
-   *
-   * TODO move lock to state or create GrpcController decorator
    *
    * @param function
    * @param responseObserver

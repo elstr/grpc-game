@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import nl.toefel.tictactoe.client.auth.PlayerIdCredentials;
 import nl.toefel.tictactoe.client.state.ClientState;
 import nl.toefel.tictactoe.client.view.Modals;
 import nl.toefel.grpc.game.TicTacToeOuterClass;
@@ -54,22 +55,15 @@ public class GrpcController {
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
       state.setMyself(player);
-
       initializeGameStream();
-    });
-  }
-
-  public void listPlayers() {
-    showDialogOnError(() -> {
-      var listPlayersRequest = ListPlayersRequest.newBuilder().build();
-      ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection()).listPlayers(listPlayersRequest);
-      state.replaceAllPlayers(listPlayersResponse.getPlayersList());
     });
   }
 
   public void initializeGameStream() {
     showDialogOnError(() -> {
-      var commandStreamObserver = newStub(state.getGrpcConnection()).playGame(
+      var commandStreamObserver = newStub(state.getGrpcConnection())
+          .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
+          .playGame(
           new StreamObserver<>() {
             @Override
             public void onNext(GameEvent gameEvent) {
@@ -88,39 +82,18 @@ public class GrpcController {
           }
       );
       state.setGameCommandStream(commandStreamObserver);
-      commandStreamObserver.onNext(GameCommand.newBuilder()
-          .setIdentify(TicTacToeOuterClass.Identify.newBuilder()
-              .setPlayer(state.getMyself())
-              .build())
-          .build());
     });
   }
-//
-//  public void addTestGame() {
-//    Player p1 = Player.newBuilder().setId("1").setName("a").build();
-//    Player p2 = Player.newBuilder().setId("2").setName("b").build();
-//
-//    state.getGameStates().put("1", GameEvent.newBuilder()
-//        .setGameId("1")
-//        .setType(TicTacToeOuterClass.EventType.START_GAME)
-//        .setNextPlayer(p1)
-//        .setPlayerO(p1)
-//        .setPlayerX(p2)
-//        .setBoard(createEmptyBoard())
-//        .build());
-//  }
-//
-//  private TicTacToeOuterClass.Board createEmptyBoard() {
-//    return TicTacToeOuterClass.Board.newBuilder()
-//        .addRows(createEmptyRow())
-//        .addRows(createEmptyRow())
-//        .addRows(createEmptyRow())
-//        .build();
-//  }
-//
-//  private TicTacToeOuterClass.BoardRow createEmptyRow() {
-//    return TicTacToeOuterClass.BoardRow.newBuilder().addColumns("").addColumns("").addColumns("").build();
-//  }
+
+  public void listPlayers() {
+    showDialogOnError(() -> {
+      var listPlayersRequest = ListPlayersRequest.newBuilder().build();
+      ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
+          .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
+          .listPlayers(listPlayersRequest);
+      state.replaceAllPlayers(listPlayersResponse.getPlayersList());
+    });
+  }
 
   public void startGameAgainstPlayer(Player opponent) {
     GameCommand startGameCommand = GameCommand.newBuilder()
