@@ -7,8 +7,6 @@ public interface Controller {
 
   void joinGame(String playerName);
 
-  void initializeGameStream();
-
   void listPlayers();
 
   void startGameAgainstPlayer(TicTacToeOuterClass.Player opponent);

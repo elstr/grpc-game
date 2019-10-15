@@ -26,11 +26,6 @@ public class ErrorDialogDecorator implements Controller {
   }
 
   @Override
-  public void initializeGameStream() {
-    showDialogOnError(controller::initializeGameStream);
-  }
-
-  @Override
   public void listPlayers() {
    showDialogOnError(controller::listPlayers);
   }

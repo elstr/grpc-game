@@ -33,6 +33,7 @@ public class GrpcController implements Controller {
 
   @Override
   public void connectToServer(String host, String port) {
+     //EXERCISE 1 starting point
       ManagedChannel grpcConnection = ManagedChannelBuilder
           .forAddress(host, Integer.parseInt(port))
           .usePlaintext()
@@ -46,14 +47,27 @@ public class GrpcController implements Controller {
 
   @Override
   public void joinGame(String playerName) {
-      var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
-      Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
-      state.setMyself(player);
-      initializeGameStream();
+    createPlayer(playerName);
+    initializeGameStream();
+  }
+
+  private void createPlayer(String playerName) {
+    //EXERCISE 2 starting point
+    var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
+    Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
+    state.setMyself(player);
   }
 
   @Override
-  public void initializeGameStream() {
+  public void listPlayers() {
+    var listPlayersRequest = ListPlayersRequest.newBuilder().build();
+    ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
+        .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
+        .listPlayers(listPlayersRequest);
+    state.setPlayers(listPlayersResponse.getPlayersList());
+  }
+
+  private void initializeGameStream() {
       var commandStreamObserver = newStub(state.getGrpcConnection())
           .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
           .playGame(
@@ -75,15 +89,6 @@ public class GrpcController implements Controller {
           }
       );
       state.setGameCommandStream(commandStreamObserver);
-  }
-
-  @Override
-  public void listPlayers() {
-      var listPlayersRequest = ListPlayersRequest.newBuilder().build();
-      ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
-          .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
-          .listPlayers(listPlayersRequest);
-      state.replaceAllPlayers(listPlayersResponse.getPlayersList());
   }
 
   @Override

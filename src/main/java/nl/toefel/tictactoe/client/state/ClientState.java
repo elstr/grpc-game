@@ -90,7 +90,7 @@ public class ClientState {
     return myselfProperty;
   }
 
-  public void replaceAllPlayers(List<Player> newPlayers) {
+  public void setPlayers(List<Player> newPlayers) {
     // dispatch on UI thread
     Platform.runLater(() -> {
       players.clear();
