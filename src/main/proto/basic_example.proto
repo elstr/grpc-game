@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package nl.toefel.grpc.basic;
 
+import "google/protobuf/wrappers.proto";
+
+//Some code generator options:
+//option java_package = "nl.toefel.grpc.basic";
+//option java_outer_classname = "BasicExample";
+
 message GreetingRequest {
     string name = 1;
 }

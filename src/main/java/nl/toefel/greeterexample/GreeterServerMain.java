@@ -12,24 +12,24 @@ import static nl.toefel.grpc.basic.BasicExample.GreetingResponse;
 
 public class GreeterServerMain {
 
-    static class GreeterService extends GreeterServiceGrpc.GreeterServiceImplBase {
-        @Override
-        public void greet(GreetingRequest request, StreamObserver<GreetingResponse> responseObserver) {
-            GreetingResponse response = GreetingResponse.newBuilder()
-                .setGreeting("Hello " + request.getName())
-                .build();
+  public static void main(String[] args) throws IOException, InterruptedException {
+    Server server = ServerBuilder.forPort(8080)
+        .addService(new GreeterService())
+        .build();
+    server.start();
+    System.out.println("GreeterService Listening on port 8080");
+    server.awaitTermination();
+  }
 
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        }
-    }
+  static class GreeterService extends GreeterServiceGrpc.GreeterServiceImplBase {
+    @Override
+    public void greet(GreetingRequest request, StreamObserver<GreetingResponse> responseObserver) {
+      GreetingResponse response = GreetingResponse.newBuilder()
+          .setGreeting("Hello " + request.getName())
+          .build();
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(8080)
-            .addService(new GreeterService())
-            .build();
-        server.start();
-        System.out.println("GreeterService Listening on port 8080");
-        server.awaitTermination();
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
     }
+  }
 }

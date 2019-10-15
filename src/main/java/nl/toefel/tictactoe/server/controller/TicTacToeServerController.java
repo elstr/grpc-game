@@ -11,7 +11,6 @@ import nl.toefel.grpc.game.TicTacToeOuterClass.ListPlayersResponse;
 import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
 import nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionResponse;
-import nl.toefel.tictactoe.server.state.AlreadyExistsException;
 import nl.toefel.tictactoe.server.state.AutoClosableLocker;
 import nl.toefel.tictactoe.server.state.ServerState;
 
@@ -62,28 +61,27 @@ public class TicTacToeServerController extends TicTacToeGrpc.TicTacToeImplBase {
     }, responseObserver);
   }
 
-  // TODO wrap calls to state in locks
   @Override
   public StreamObserver<GameCommand> playGame(StreamObserver<GameEvent> responseObserver) {
     StreamObserver<GameCommand> gameCommandStream = new StreamObserver<GameCommand>() {
       @Override
       public void onNext(GameCommand command) {
-        state.onGameCommand(command);
+        withinLock(() -> state.onGameCommand(command));
       }
 
       @Override
       public void onError(Throwable t) {
-        state.unjoinPlayer();
+        withinLock(state::unjoinPlayer);
       }
 
       @Override
       public void onCompleted() {
-        state.unjoinPlayer();
+        withinLock(state::unjoinPlayer);
       }
     };
 
     // Register this game stream so we we can distribute events from other players to it at a later time.
-    state.joinPlayerAndTrack(gameCommandStream, responseObserver);
+    withinLock(() -> state.joinPlayerAndTrack(gameCommandStream, responseObserver));
 
     return gameCommandStream;
   }
@@ -98,12 +96,22 @@ public class TicTacToeServerController extends TicTacToeGrpc.TicTacToeImplBase {
   public void withLockAndErrorHandling(Runnable function, StreamObserver<?> responseObserver) {
     try (var ignored = new AutoClosableLocker(lock)) {
       function.run();
-    } catch (AlreadyExistsException e) {
-      log(e);
-      responseObserver.onError(Status.ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       log(e);
       responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).withCause(e).asRuntimeException());
+    }
+  }
+
+  /**
+   * Run code within the global lock, printing and swallowing exceptions.
+   * @param function
+   */
+  public void withinLock(Runnable function) {
+    try (var ignored = new AutoClosableLocker(lock)) {
+      function.run();
+    } catch (Exception e) {
+      log(e);
+      e.printStackTrace();
     }
   }
 

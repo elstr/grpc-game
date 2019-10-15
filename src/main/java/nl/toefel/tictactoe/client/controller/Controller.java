@@ -2,10 +2,10 @@ package nl.toefel.tictactoe.client.controller;
 
 import nl.toefel.grpc.game.TicTacToeOuterClass;
 
-public interface TicTacToeClientController {
+public interface Controller {
   void connectToServer(String host, String port);
 
-  void createPlayer(String playerName);
+  void joinGame(String playerName);
 
   void initializeGameStream();
 

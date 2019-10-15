@@ -16,7 +16,7 @@ import static nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 public class JoinGameComponent extends HBox {
     private TextField playerNameTxt = new TextField();
     private Label playerNameLbl = new Label("Player name:");
-    private Button createPlayerBtn = new Button("Create player");
+    private Button createPlayerBtn = new Button("Join game");
     private Label stateLbl = new Label("State: not joined");
 
     public JoinGameComponent(Consumer<String> joinServerCallback,

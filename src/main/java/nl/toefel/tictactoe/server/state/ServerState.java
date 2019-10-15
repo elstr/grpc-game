@@ -27,9 +27,10 @@ public class ServerState {
   private AtomicInteger playerIdSequence = new AtomicInteger(1);
   private AtomicInteger gameIdSequence = new AtomicInteger(1);
 
+  // a list of all players ever created during runtime
   private List<Player> createdPlayers = new ArrayList<>();
 
-  // List of tuples with players and their input/output stream.
+  // List of tuples with players still connected via the PlayGame method and their input/output stream.
   private List<PlayerWithIO> joinedPlayers = new ArrayList<>();
 
   // Maps gameId to GameEvent, a game event contains the latest state of a game
@@ -63,9 +64,10 @@ public class ServerState {
       // onError closes the stream
       responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("player with id " + playerId + " has already joined!").asException());
     } else if (playerToBeJoined.isEmpty()) {
-      responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("player with id " +playerId + " does not exist, create player first!!").asException());
+      // onError closes the stream
+      responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("player with id " + playerId + " does not exist, create player first!!").asException());
     } else {
-      PlayerWithIO playerWithIO = new PlayerWithIO(playerToBeJoined.get(), gameCommandStream, responseObserver);
+      PlayerWithIO playerWithIO = new PlayerWithIO(playerToBeJoined.get(), responseObserver);
       this.joinedPlayers.add(playerWithIO);
     }
   }
@@ -139,7 +141,7 @@ public class ServerState {
     } else if (playerMakingMove.isEmpty()) {
       System.out.println("Did not find player making the move");
     } else if (!eq(gameEvent.getNextPlayer(), playerMakingMove.get().getPlayer())) {
-      System.out.println("Player going before his turn: " +  playerMakingMove.get().getPlayer());
+      System.out.println("Player going before his turn: " + playerMakingMove.get().getPlayer());
     } else {
       GameEvent newEvent = gameEvent.toBuilder()
           .setType(EventType.BOARD_MOVE)
@@ -164,12 +166,16 @@ public class ServerState {
 
   private Board updateBoardWithMove(Player player, GameEvent currentGameState, BoardMove boardMove) {
     String sign = eq(player, currentGameState.getPlayerO()) ? "O" : "X";
-    BoardRow updatedRow = currentGameState.getBoard().getRows(boardMove.getRow()).toBuilder()
-        .setColumns(boardMove.getColumn(), sign)
-        .build();
-    return currentGameState.getBoard().toBuilder()
-        .setRows(boardMove.getRow(), updatedRow)
-        .build();
+//    BoardRow updatedRow = currentGameState.getBoard().getRows(boardMove.getRow()).toBuilder()
+//        .setColumns(boardMove.getColumn(), sign)
+//        .build();
+//    return currentGameState.getBoard().toBuilder()
+//        .setRows(boardMove.getRow(), updatedRow)
+//        .build();
+
+    Board.Builder builder = currentGameState.getBoard().toBuilder();
+    builder.getRowsBuilder(boardMove.getRow()).setColumns(boardMove.getColumn(), sign);
+    return builder.build();
   }
 
 
@@ -192,12 +198,6 @@ public class ServerState {
     return joinedPlayers.stream()
         .filter(it -> it.getPlayer() != null)
         .filter(it -> playerId.equals(it.getPlayer().getId()))
-        .findFirst();
-  }
-
-  private Optional<PlayerWithIO> findPlayerWithIOByCommandStream(StreamObserver<GameCommand> commandStream) {
-    return joinedPlayers.stream()
-        .filter(it -> commandStream == it.getCommandStream())
         .findFirst();
   }
 

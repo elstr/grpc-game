@@ -22,12 +22,12 @@ import static nl.toefel.grpc.game.TicTacToeOuterClass.TestConnectionRequest;
 /**
  * Controller that receives events from the window, like clicks on buttons and clicks within game fields.
  */
-public class GrpcTicTacToeClientController implements TicTacToeClientController {
+public class GrpcController implements Controller {
 
   // Contains the game state used by the JavaFX application
   private final ClientState state;
 
-  public GrpcTicTacToeClientController(ClientState state) {
+  public GrpcController(ClientState state) {
     this.state = state;
   }
 
@@ -45,7 +45,7 @@ public class GrpcTicTacToeClientController implements TicTacToeClientController 
   }
 
   @Override
-  public void createPlayer(String playerName) {
+  public void joinGame(String playerName) {
       var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
       Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
       state.setMyself(player);

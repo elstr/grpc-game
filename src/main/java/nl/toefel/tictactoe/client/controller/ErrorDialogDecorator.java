@@ -8,10 +8,10 @@ import static nl.toefel.grpc.game.TicTacToeOuterClass.*;
 /**
  * Decorator that forwards all methods to the wrapped controller and shows a JavaFX dialog when an exception is caught.
  */
-public class DialogOnErrorClientControllerDecorator implements TicTacToeClientController {
-  private final TicTacToeClientController controller;
+public class ErrorDialogDecorator implements Controller {
+  private final Controller controller;
 
-  public DialogOnErrorClientControllerDecorator(TicTacToeClientController controller) {
+  public ErrorDialogDecorator(Controller controller) {
     this.controller = controller;
   }
 
@@ -21,8 +21,8 @@ public class DialogOnErrorClientControllerDecorator implements TicTacToeClientCo
   }
 
   @Override
-  public void createPlayer(String playerName) {
-    showDialogOnError(() -> controller.createPlayer(playerName));
+  public void joinGame(String playerName) {
+    showDialogOnError(() -> controller.joinGame(playerName));
   }
 
   @Override
