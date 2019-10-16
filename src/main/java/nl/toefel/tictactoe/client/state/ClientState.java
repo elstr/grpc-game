@@ -53,10 +53,6 @@ public class ClientState {
     });
   }
 
-  public void disconnect() {
-    this.reset();
-  }
-
   private void reset() {
     Platform.runLater(() -> {
       grpcConnection.shutdownNow();
@@ -104,11 +100,19 @@ public class ClientState {
   }
 
   public StreamObserver<GameCommand> getGameCommandStream() {
-    return gameCommandStream.get();
+    StreamObserver<GameCommand> gameCommandStream = this.gameCommandStream.get();
+    if (gameCommandStream == null) {
+      Modals.showPopup("Game command stream null", "The game command stream is null, connection lost?");
+    }
+    return gameCommandStream;
   }
 
   public void setGameCommandStream(StreamObserver<GameCommand> gameCommandStream) {
     this.gameCommandStream.set(gameCommandStream);
+  }
+
+  public void onGameEvent(GameEvent gameEvent) {
+    Platform.runLater(() -> gameStates.put(gameEvent.getGameId(), gameEvent));
   }
 
   public ObservableMap<String, GameEvent> getGameStates() {

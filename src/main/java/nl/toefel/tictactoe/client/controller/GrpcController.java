@@ -6,7 +6,6 @@ import io.grpc.stub.StreamObserver;
 import nl.toefel.grpc.game.TicTacToeOuterClass.BoardMove;
 import nl.toefel.tictactoe.client.auth.PlayerIdCredentials;
 import nl.toefel.tictactoe.client.state.ClientState;
-import nl.toefel.tictactoe.client.view.Modals;
 
 import static nl.toefel.grpc.game.TicTacToeGrpc.newBlockingStub;
 import static nl.toefel.grpc.game.TicTacToeGrpc.newStub;
@@ -58,23 +57,15 @@ public class GrpcController implements Controller {
     state.setMyself(player);
   }
 
-  @Override
-  public void listPlayers() {
-    var listPlayersRequest = ListPlayersRequest.newBuilder().build();
-    ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
-        .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
-        .listPlayers(listPlayersRequest);
-    state.setPlayers(listPlayersResponse.getPlayersList());
-  }
-
   private void initializeGameStream() {
+    // EXERCISE 3 starting point
       var commandStreamObserver = newStub(state.getGrpcConnection())
           .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
           .playGame(
           new StreamObserver<>() {
             @Override
             public void onNext(GameEvent gameEvent) {
-              state.getGameStates().put(gameEvent.getGameId(), gameEvent);
+              state.onGameEvent(gameEvent);
             }
 
             @Override
@@ -92,22 +83,33 @@ public class GrpcController implements Controller {
   }
 
   @Override
+  public void listPlayers() {
+    // EXERCISE 4 starting point
+    var listPlayersRequest = ListPlayersRequest.newBuilder().build();
+    ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
+        .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
+        .listPlayers(listPlayersRequest);
+    state.setPlayers(listPlayersResponse.getPlayersList());
+  }
+
+  @Override
   public void startGameAgainstPlayer(Player opponent) {
+    // EXERCISE 5 starting point
     GameCommand startGameCommand = GameCommand.newBuilder()
         .setStartGame(StartGame.newBuilder()
             .setFromPlayer(state.getMyself())
             .setToPlayer(opponent))
         .build();
+
     StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
     if (gameCommandStream != null) {
       gameCommandStream.onNext(startGameCommand);
-    } else {
-      Modals.showPopup("Game command stream null", "The game command stream is null, connection lost?");
     }
   }
 
   @Override
   public void makeBoardMove(BoardMove move) {
+    // EXERCISE 6 starting point
     StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
     if (gameCommandStream != null) {
       gameCommandStream.onNext(GameCommand.newBuilder().setBoardMove(move).build());
