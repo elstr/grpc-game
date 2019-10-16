@@ -1,20 +1,38 @@
 # gRPC game workshop
 
-**REQUIREMENTS: java 11**
+REQUIREMENTS: 
+ * Java 11
+ * Uses the gradle build system, gradle downloads itself!  
+       
+       ./gradlew <command> 
+ 
+ * Tip for Intellij users: install [protocol buffers plugin](https://plugins.jetbrains.com/plugin/8277-protobuf-support/) 
 
+Resources:
+ * [Workshop Presentation](https://docs.google.com/presentation/d/1AoH7IQFmmCYjHm1BozzPpWyjITfZ4e8HF3Uezc8AFII/edit?usp=sharing)
+ * [Protocol Buffers 3 docs](https://developers.google.com/protocol-buffers/docs/proto3) <- make sure to look for proto3!
+ * [Protocol Buffers Java generated code guide](https://developers.google.com/protocol-buffers/docs/reference/java-generated) <- make sure to look for proto3!
+ * [gRPC homepage](https://www.grpc.io/)
+ * [gRPC docs](https://www.grpc.io/docs/) <- select Java or directly go to [Java generated code reference](https://www.grpc.io/docs/reference/java/generated-code/)
+ * [gRPC videos](https://www.grpc.io/docs/talks/)
+
+# Overview 
 The workshop contains a simple tic-tac-toe game (boter kaas en eieren). Multiple players can join and play against each other.
 
 There are two components: a client and and a server. Clients connect to the server using gRPC and execute calls such as `testConnection()`, `createPlayer()`, `listPlayers()` and `playGame()`. 
 
 Most of the code is already finished. The only thing that needs to be implemented is the client side gRPC layer.
 
-#### Starting instructions
+Schematic overview of the interactions between client and server:
+![Interations client-server](grpc-game-sequence.png)
 
-Run ServerMain.java from your IDE or 
+#### Running the client and server
+
+Run `ServerMain.java` from your IDE or 
 
     ./gradlew runServer
 
-Run ClientMain.java from your IDE or 
+Run `ClientMain.java` from your IDE or 
 
     ./gradlew runClient
 
@@ -32,9 +50,11 @@ If you change anything in this file, you should regenerate the code using:
 
 The next exercises will require you to implement the client side, step by step.
 
-### 0. Start the server
+### Start the server
 
-You can start the server from the IDE by running ServerMain.java or 
+During the workshop, the host will run a gRPC server instance that everybody can use.
+
+You can also start the server yourself from the IDE by running `ServerMain.java` or 
 
     ./gradlew runServer
     
