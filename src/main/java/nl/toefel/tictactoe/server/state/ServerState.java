@@ -6,6 +6,8 @@ import nl.toefel.grpc.game.TicTacToeOuterClass.Player;
 import nl.toefel.grpc.game.TicTacToeOuterClass.StartGame;
 import nl.toefel.tictactoe.server.auth.Contexts;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,11 +79,11 @@ public class ServerState {
     Optional<PlayerWithIO> existingJoinedPlayer = findPlayerWithIOPlayerId(playerId);
     if (existingJoinedPlayer.isPresent()) {
       PlayerWithIO playerWithIO = existingJoinedPlayer.get();
-      System.out.println("Unjoining player " + playerId);
+      log("Unjoining player " + playerId);
       joinedPlayers.remove(playerWithIO);
       closeActiveGamesOfUnjoinedPlayer(playerWithIO);
     } else {
-      System.out.println("Unjoining player " + playerId + ", but player does not exist anymore");
+      log("Unjoining player " + playerId + ", but player does not exist anymore");
     }
   }
 
@@ -102,21 +104,21 @@ public class ServerState {
   }
 
   public void onGameCommand(GameCommand command) {
+    String playerId = Contexts.PLAYER_ID.get();
+    Optional<PlayerWithIO> playerWithIO = findPlayerWithIOPlayerId(playerId);
     switch (command.getCommandCase()) {
       case START_GAME:
-        startGameBetweenTwoPlayers(command.getStartGame());
+        startGameBetweenTwoPlayers(playerId, playerWithIO, command.getStartGame());
         break;
       case BOARD_MOVE:
-        String playerId = Contexts.PLAYER_ID.get();
-        Optional<PlayerWithIO> playerMakingMove = findPlayerWithIOPlayerId(playerId);
-        processPlayerMove(playerMakingMove, command.getBoardMove());
+        processPlayerMove(playerId, playerWithIO, command.getBoardMove());
         break;
       default:
-        System.out.println("Unknown command " + command);
+        log("Unknown command " + command);
     }
   }
 
-  private void startGameBetweenTwoPlayers(StartGame startGameCommand) {
+  private void startGameBetweenTwoPlayers(String playerId, Optional<PlayerWithIO> playerWithIO, StartGame startGameCommand) {
     Optional<PlayerWithIO> fromPlayer = findPlayerWithIOPlayerId(startGameCommand.getFromPlayer().getId());
     Optional<PlayerWithIO> toPlayer = findPlayerWithIOPlayerId(startGameCommand.getToPlayer().getId());
 
@@ -124,24 +126,24 @@ public class ServerState {
       GameEvent event = createNewGame(startGameCommand);
       games.put(event.getGameId(), event);
 
+      log("Started game " + event.getGameId() + " between " + fromPlayer.get().getPlayer().getName() + " and " + toPlayer.get().getPlayer().getName());
+
       fromPlayer.get().getEventStream().onNext(event);
       toPlayer.get().getEventStream().onNext(event);
     } else {
-      System.out.println("Could not find to or from player streams for which a start game was requested");
-      System.out.println("fromPlayer: " + fromPlayer);
-      System.out.println("toPlayer: " + toPlayer);
+      log("Could not find to or from player streams for which a start game was requested from:" + fromPlayer + ", to:" +toPlayer);
     }
   }
 
-  private void processPlayerMove(Optional<PlayerWithIO> playerMakingMove, BoardMove boardMove) {
+  private void processPlayerMove(String playerId, Optional<PlayerWithIO> playerMakingMove, BoardMove boardMove) {
     GameEvent gameEvent = games.get(boardMove.getGameId());
 
     if (gameEvent == null) {
-      System.out.println("Requested board move for nonexisting game " + boardMove);
+      log("Requested board move for non-existing game " + boardMove.getGameId());
     } else if (playerMakingMove.isEmpty()) {
-      System.out.println("Did not find player making the move");
+      log("Did not find player making the move, player-id: " + playerId);
     } else if (!eq(gameEvent.getNextPlayer(), playerMakingMove.get().getPlayer())) {
-      System.out.println("Player going before his turn: " + playerMakingMove.get().getPlayer());
+      log("Player going before his turn: " + playerMakingMove.get().getPlayer().getName());
     } else {
       GameEvent newEvent = gameEvent.toBuilder()
           .setType(EventType.BOARD_MOVE)
@@ -150,6 +152,8 @@ public class ServerState {
           .build();
 
       games.put(boardMove.getGameId(), newEvent);
+
+      log("Move recorded on " + boardMove.getGameId() + " by " + playerMakingMove.get().getPlayer().getName());
 
       findPlayerWithIOPlayerId(gameEvent.getPlayerO().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
       findPlayerWithIOPlayerId(gameEvent.getPlayerX().getId()).ifPresent(it -> it.getEventStream().onNext(newEvent));
@@ -211,5 +215,9 @@ public class ServerState {
 
   private BoardRow createEmptyRow() {
     return BoardRow.newBuilder().addColumns("").addColumns("").addColumns("").build();
+  }
+
+  private void log(String msg) {
+    System.out.println(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ": " + msg);
   }
 }

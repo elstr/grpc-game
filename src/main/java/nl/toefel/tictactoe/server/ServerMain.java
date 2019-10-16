@@ -19,7 +19,10 @@ public class ServerMain {
             .start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(service::shutdownNow));
-        System.out.println("Started listening for rpc calls on 8080...");
+        String ipAddresses = IpUtil.resolveIPAddresses();
+        System.out.println("Started listening for rpc calls on " + ipAddresses + " on port 8080...");
         service.awaitTermination();
     }
+
+
 }

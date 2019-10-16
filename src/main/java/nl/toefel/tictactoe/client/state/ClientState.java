@@ -55,7 +55,9 @@ public class ClientState {
 
   private void reset() {
     Platform.runLater(() -> {
-      grpcConnection.shutdownNow();
+      if (grpcConnection != null) {
+        grpcConnection.shutdownNow();
+      }
       grpcConnection = null;
       grpcConnectionProperty.set(null);
       myself = null;
