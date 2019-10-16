@@ -54,14 +54,6 @@ public class TicTacToeServerController extends TicTacToeGrpc.TicTacToeImplBase {
   }
 
   @Override
-  public void listPlayersStream(ListPlayersRequest request, StreamObserver<Player> responseObserver) {
-    withLockAndErrorHandling(() -> {
-      state.getJoinedPlayers().forEach(responseObserver::onNext);
-      responseObserver.onCompleted();
-    }, responseObserver);
-  }
-
-  @Override
   public StreamObserver<GameCommand> playGame(StreamObserver<GameEvent> responseObserver) {
     StreamObserver<GameCommand> gameCommandStream = new StreamObserver<GameCommand>() {
       @Override

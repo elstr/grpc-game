@@ -32,16 +32,7 @@ public class GrpcController implements Controller {
 
   @Override
   public void connectToServer(String host, String port) {
-     //EXERCISE 1 starting point
-      ManagedChannel grpcConnection = ManagedChannelBuilder
-          .forAddress(host, Integer.parseInt(port))
-          .usePlaintext()
-          .build();
-
-      // test the connection, because gRPC lazily connects
-      newBlockingStub(grpcConnection).testConnection(TestConnectionRequest.newBuilder().build());
-
-      state.setGrpcConnection(grpcConnection);
+     //EXERCISE 1 starting point, see https://github.com/toefel18/grpc-game
   }
 
   @Override
@@ -51,68 +42,25 @@ public class GrpcController implements Controller {
   }
 
   private void createPlayer(String playerName) {
-    //EXERCISE 2 starting point
-    var request = CreatePlayerRequest.newBuilder().setName(playerName).build();
-    Player player = newBlockingStub(state.getGrpcConnection()).createPlayer(request);
-    state.setMyself(player);
+    //EXERCISE 2 starting point, see https://github.com/toefel18/grpc-game
   }
 
   private void initializeGameStream() {
-    // EXERCISE 3 starting point
-      var commandStreamObserver = newStub(state.getGrpcConnection())
-          .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
-          .playGame(
-          new StreamObserver<>() {
-            @Override
-            public void onNext(GameEvent gameEvent) {
-              state.onGameEvent(gameEvent);
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-              state.onGameStreamError(throwable);
-            }
-
-            @Override
-            public void onCompleted() {
-              state.onGameStreamCompleted();
-            }
-          }
-      );
-      state.setGameCommandStream(commandStreamObserver);
+    // EXERCISE 3 starting point, see https://github.com/toefel18/grpc-game
   }
 
   @Override
   public void listPlayers() {
-    // EXERCISE 4 starting point
-    var listPlayersRequest = ListPlayersRequest.newBuilder().build();
-    ListPlayersResponse listPlayersResponse = newBlockingStub(state.getGrpcConnection())
-        .withCallCredentials(new PlayerIdCredentials(state.getMyself().getId()))
-        .listPlayers(listPlayersRequest);
-    state.setPlayers(listPlayersResponse.getPlayersList());
+    // EXERCISE 4 starting point, see https://github.com/toefel18/grpc-game
   }
 
   @Override
   public void startGameAgainstPlayer(Player opponent) {
-    // EXERCISE 5 starting point
-    GameCommand startGameCommand = GameCommand.newBuilder()
-        .setStartGame(StartGame.newBuilder()
-            .setFromPlayer(state.getMyself())
-            .setToPlayer(opponent))
-        .build();
-
-    StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
-    if (gameCommandStream != null) {
-      gameCommandStream.onNext(startGameCommand);
-    }
+    // EXERCISE 5 starting point, see https://github.com/toefel18/grpc-game
   }
 
   @Override
   public void makeBoardMove(BoardMove move) {
-    // EXERCISE 6 starting point
-    StreamObserver<GameCommand> gameCommandStream = state.getGameCommandStream();
-    if (gameCommandStream != null) {
-      gameCommandStream.onNext(GameCommand.newBuilder().setBoardMove(move).build());
-    }
+    // EXERCISE 6 starting point, see https://github.com/toefel18/grpc-game
   }
 }

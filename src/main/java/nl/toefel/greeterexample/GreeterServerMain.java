@@ -13,11 +13,11 @@ import static nl.toefel.grpc.basic.BasicExample.GreetingResponse;
 public class GreeterServerMain {
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    Server server = ServerBuilder.forPort(8080)
+    Server server = ServerBuilder.forPort(8081)
         .addService(new GreeterService())
         .build();
     server.start();
-    System.out.println("GreeterService Listening on port 8080");
+    System.out.println("GreeterService Listening on port 8081");
     server.awaitTermination();
   }
 
