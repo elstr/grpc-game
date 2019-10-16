@@ -44,21 +44,24 @@ The client will open a JavaFX window.
 
 Take a look at [tic_tac_toe.proto](src/main/proto/tic_tac_toe.proto) This file already contains the protocol buffer message types that will be used, and a service definition. The server is already implemented using this definition. 
 
-If you change anything in this file, you should regenerate the code using:
-
-    ./gradlew generateProto
-
 The next exercises will require you to implement the client side, step by step.
+
+
 
 ### Start the server
 
 During the workshop, the host will run a gRPC server instance that everybody can use.
 
-You can also start the server yourself from the IDE by running `ServerMain.java` or 
+During development you can also start the server yourself from the IDE by running `ServerMain.java` or 
 
     ./gradlew runServer
     
 The next assignments assume you keep the server running. 
+
+
+
+
+
 
 ### 1. Setting up a connection
 
@@ -68,7 +71,8 @@ implement the `connectToServer()` method.
 **Step 1**: create a `ManagedChannel` using a `ManagedChanelBuilder` to build a channel that connects to the given host and port.
 
 Once you have channel, you can create a client for a service defined in a .proto file. 
-We only have one service defined and it is called TicTacToe.
+We only have one service defined and it is called TicTacToe. The clients are called stubs and 
+only need a channel. All calls are send over that channel.
  
 **Step 2**: create a blocking stub using the `TicTacToeGrpc.newBlockingStub()` class and call `testConnection()` on that stub. This will execute a call to the server! 
 
@@ -83,6 +87,9 @@ Run the client and test your code by running ClientMain.java or
 
 And click the connect button!
 
+
+
+
 ### 2. Create a player
 
 Open the file [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) and 
@@ -96,6 +103,10 @@ implement the `createPlayer()` method.
 
 Test it out running the game and click the Join button, you should see your name appear next to it. 
 
+
+
+
+
 ### 3. Initialize the bi-directional stream
 
 Open the file [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) and 
@@ -107,13 +118,18 @@ You might have noticed that the blockingstub you created in the previous exercis
 
 **Step 2** The stubs have many sort of builder methods. The one you should use now is `.withCallCredentials()` and pass it a new `PlayerIdCredentials` object. The ID passed into the PlayerIdCredentials should equal `state.getMyself().getId()`. Call credentials will be sent as metadata before each call. The server will use it to identify which player is joining the game.
 
-**Step 3** Issue a call to `playGame()` The input parameter is a StreamObserver. Tou can create an anonymous class of the StreamObserver interface, giving you 3 methods to implement `onNext()`, `onError()`, `onCompleted()`. This methods can be implemented with only one line each:
+**Step 3** Issue a call to `playGame()` The input parameter is a StreamObserver. You can create an anonymous class of the StreamObserver interface, giving you 3 methods to implement `onNext()`, `onError()`, `onCompleted()`. This methods can be implemented with only one line each:
 
     onNext()      should be implemented:     state.onGameEvent(gameEvent)
     onError()     should be implemented:     state.onGameStreamError(throwable)
     onCompleted() should be implemented:     state.onGameStreamCompleted()
     
 **Step 4** Store the stream returned by `playGame()` in the state by using `state.setGameCommandStream()`. The game uses this stream to send game commands to the server. 
+
+Test it out running the game and click the Join button. If you see your name next to it, and no error pops up, everythin is ok! 
+
+
+
 
 ### 4. Implement listPlayers
 
@@ -123,7 +139,11 @@ implement the `listPlayers()` method.
 
 **Step 1** Create a stub (whichever you like) and call listPlayers. Remember you always need an input parameter, even if it is empty. Make sure to also send the PlayerIdCredentials!
  
-**Step 2** Store the list of players in `state.setPlayers()`
+**Step 2** Store the list of players that gets returned in `state.setPlayers()`
+
+Test it out running the game, join the game. You can now click Fetch Players. A list of 
+all players that are joined should be displayed.  
+
 
 ### 5. Implemented startGameAgainstPlayer
 
@@ -136,6 +156,17 @@ This method receives the opponent you want to challenge. You can get yourself us
 
 **Step 2** Send this game command to the server using `state.getGameCommandStream().onNext()`
 
+
+Test it out by:
+
+1. Run the client 2 times:
+2. In each client join the game using a different name. 
+3. In both windows, now click 'Fetch Players'. You should see 2 players in the list.
+4. In the first client, select the other player and click the 'Start game' button 
+(button is located) below the list.
+5. In both windows, you should see a grid on the right side!    
+
+
 ### 6. Implement make board move
 
 This is the last exercise, then we will be able to play the game.
@@ -143,30 +174,47 @@ This is the last exercise, then we will be able to play the game.
 Open the file [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) and 
 implement the `makeBoardMove()` method. 
 
-**Step 1** Create GameCommand with the received BoardMove. 
+**Step 1** Create GameCommand with the BoardMove parameter. 
 
 **Step 2** Send this game command to the server using `state.getGameCommandStream().onNext()`
 
+Test it out by:
 
-### 7. Change the listPlayer method a server side streaming call
+1. Run the client 2 times:
+2. In each client join the game using a different name. 
+3. In both windows, now click 'Fetch Players'. You should see 2 players in the list.
+4. In the first client, select the other player and click the 'Start game' button 
+(button is located) below the list.
+5. In both windows, you should see a grid on the right side! 
+6. The window that initiated the game can click somewhere in the grid to make a move.
+7. Both windows should update, the other player can make the next move.
 
-Extra credit :)
+Test this out by playing against someone else!
+The game itself does not detect when a game has ended yet. So this is it :)
 
-Change listPlayer to a server side streaming call. 
+### 7. Extra credit: Add a ListPlayers streaming call to the client and server 
 
-**Step 1** Update the TicTacToe service definition in the tic_tac_toe.proto file. Make the return type a stream of Player objects.
+**Step 1** Add an RPC to the TicTacToe service definition called `ListPlayersStream` in the tic_tac_toe.proto file. Make the return type a stream 
+of Player objects. The request type can be the same as the other `listPlayers()` method.
 
-**Step 2** generate the code `./gradlew generateProto`
+**Step 2** Regenerate regenerate the code using:
 
-**Step 3** Update the server code
+    ./gradlew generateProto
 
-**Step 4** Update the client code 
+The new method is now available on the stubs, and you can override a new method in [TicTacToeServerController](src/main/java/nl/toefel/tictactoe/server/controller/TicTacToeServerController.java)
 
+**Step 3** Implement the server side by calling `onNext` multiple times for each player. When all 
+players are sent, then call `onCompleted()` to signal that no more items are to be expected. 
 
+**Step 4** Update the listPlayers() method in [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) 
+to use `listPlayersStream()` method. 
+
+# Issues for Linux users
 ### JavaFX Scaling issues 4k displays using Linux
+
+If you are running linux and you have a 4K display, the UI might look really small. Gnome based distro's can use this command to scale the window:
+
+    gsettings set org.gnome.desktop.interface scaling-factor 2
 
 See https://stackoverflow.com/questions/26182460/javafx-8-hidpi-support
  
-Solution for gnome based distro's:
-
-    gsettings set org.gnome.desktop.interface scaling-factor 2
