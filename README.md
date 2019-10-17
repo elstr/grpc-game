@@ -68,7 +68,7 @@ The next assignments assume you keep the server running.
 Open the file [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) and 
 implement the `connectToServer()` method. 
 
-**Step 1**: create a `ManagedChannel` using a `ManagedChanelBuilder` to build a channel that connects to the given host and port. 
+**Step 1**: create a `ManagedChannel` using a `ManagedChannelBuilder` to build a channel that connects to the given host and port. 
 The builder has a method `usePlainText()` that you must call, because we are not setting up a secure connection for this workshop.
 
 Once you have channel, you can create a client for a service defined in a .proto file. 
@@ -84,7 +84,7 @@ everything is OK.
 
 Run the client and test your code by running ClientMain.java or 
 
-    .gradlew runClient 
+    ./gradlew runClient 
 
 And click the connect button!
 
