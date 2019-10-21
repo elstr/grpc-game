@@ -210,6 +210,23 @@ players are sent, then call `onCompleted()` to signal that no more items are to 
 **Step 4** Update the listPlayers() method in [GrpcController.java](src/main/java/nl/toefel/tictactoe/client/controller/GrpcController.java) 
 to use `listPlayersStream()` method. 
 
+# Solutions 
+
+The solutions are in a branch called 'answers'.
+
+# Next steps
+
+Take a look at a previous workshop, you can find it here: [grpc-workshop](https://github.com/toefel18/grpc-workshop)
+
+That workshop goes in more detail on a variety of topics, and also includes a gRPC web example. Topics of exercises there are:
+
+- Protobuf, to json conversion, and testing backward compatiblity
+- Creating a grpc service and implementing the call 
+- Connecting a grpc backend to react browser app using grpc-web
+- Server side streaming
+- Adding authentication
+- Transcoding a gRPC api to http
+
 # Issues for Linux users
 ### JavaFX Scaling issues 4k displays using Linux
 
