@@ -92,6 +92,8 @@ sourceSets {
     }
 }
 
+mainClassName = "nl.toefel.tictactoe.server.ServerMain"
+
 task runClient(type:JavaExec) {
     main = "nl.toefel.tictactoe.client.ClientMain"
     classpath = sourceSets.main.runtimeClasspath
